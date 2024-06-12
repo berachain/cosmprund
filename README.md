@@ -1,6 +1,6 @@
 # Cosmos-Pruner
 
-The goal of this project is to be able to prune a tendermint data base of blocks and an Cosmos-sdk application DB of all but the last X versions. This will allow people to not have to state sync every x days. 
+The goal of this project is to be able to prune a cometbft data base of blocks and an Cosmos-sdk application DB of all but the last X versions. This will allow people to not have to state sync every x days.
 
 This tool works with a subset of modules. While an application may have modules outside the scope of this tool , this tool will prune the default sdk module, and osmosis added module. 
 
@@ -8,11 +8,11 @@ This tool works with a subset of modules. While an application may have modules 
 
 Due to inefficiencies of iavl and the simple approach of this tool, it can take ages to prune the data of a large node.  
 
-We are working on integrating this natively into the Cosmos-sdk and Tendermint
+We are working on integrating this natively into the Cosmos-sdk and CometBFT
 
 ## How to use
 
-Cosmprund works of a data directory that has the same structure of a normal cosmos-sdk/tendermint node. By default it will prune all but 10 blocks from tendermint, and all but 10 versions of application state. 
+Cosmprund works of a data directory that has the same structure of a normal cosmos-sdk/cometbft node. By default it will prune all but 10 blocks from cometbft, and all but 10 versions of application state.
 
 > Note: Application pruning can take a very long time dependent on the size of the db. 
 
@@ -36,8 +36,8 @@ Flags:
 - `blocks`: amount of blocks to keep on the node (Default 10)
 - `versions`: amount of app state versions to keep on the node (Default 10)
 - `app`: the application you want to prune, outside the sdk default modules. See `Supported Apps`
-- `cosmos-sdk`: If pruning a non cosmos-sdk chain, like Nomic, you only want to use tendermint pruning or if you want to only prune tendermint block & state as this is generally large on machines(Default true)
-- `tendermint`: If the user wants to only prune application data they can disable pruning of tendermint data. (Default true)
+- `cosmos-sdk`: If pruning a non cosmos-sdk chain, like Nomic, you only want to use cometbft pruning or if you want to only prune cometbft block & state as this is generally large on machines(Default true)
+- `cometbft`: If the user wants to only prune application data they can disable pruning of cometbft data. (Default true)
 
 
 #### Supported Apps:

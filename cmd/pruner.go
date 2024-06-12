@@ -3,36 +3,40 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/metrics"
+	"cosmossdk.io/store/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	feegrant "cosmossdk.io/x/feegrant"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	evidencetypes "cosmossdk.io/x/evidence/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
-	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	"github.com/neilotoole/errgroup"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"github.com/tendermint/tendermint/state"
-	tmstore "github.com/tendermint/tendermint/store"
-	db "github.com/tendermint/tm-db"
+	"github.com/cometbft/cometbft/state"
+	cmtstore "github.com/cometbft/cometbft/store"
+	db "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
 
 	"github.com/binaryholdings/cosmos-pruner/internal/rootmulti"
 )
+
 
 // load db
 // load app store and prune
@@ -48,9 +52,9 @@ func pruneCmd() *cobra.Command {
 			ctx := cmd.Context()
 			errs, _ := errgroup.WithContext(ctx)
 			var err error
-			if tendermint {
+			if cometbft {
 				errs.Go(func() error {
-					if err = pruneTMData(args[0]); err != nil {
+					if err = pruneCmtData(args[0]); err != nil {
 						return err
 					}
 					return nil
@@ -75,7 +79,7 @@ func pruneCmd() *cobra.Command {
 func pruneAppState(home string) error {
 
 	// this has the potential to expand size, should just use state sync
-	// dbType := db.BackendType(backend)
+	// dbType := dbm.BackendType(backend)
 
 	dbDir := rootify(dataDir, home)
 
@@ -98,7 +102,7 @@ func pruneAppState(home string) error {
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey, crisistypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, consensusparamtypes.StoreKey,
-		ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
+		ibcexported.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		authzkeeper.StoreKey,
 	)
@@ -560,10 +564,10 @@ func pruneAppState(home string) error {
 	}
 
 	// TODO: cleanup app state
-	appStore := rootmulti.NewStore(appDB)
+	appStore := rootmulti.NewStore(appDB, log.NewLogger(os.Stderr), metrics.NewNoOpMetrics())
 
 	for _, value := range keys {
-		appStore.MountStoreWithDB(value, sdk.StoreTypeIAVL, nil)
+		appStore.MountStoreWithDB(value, types.StoreTypeIAVL, nil)
 	}
 
 	err = appStore.LoadLatestVersion()
@@ -580,9 +584,7 @@ func pruneAppState(home string) error {
 
 	fmt.Println(len(v64))
 
-	appStore.PruneHeights = v64[:len(v64)-10]
-
-	appStore.PruneStores()
+	appStore.PruneStores(int64(len(v64))-10)
 
 	fmt.Println("compacting application state")
 	if err := appDB.ForceCompact(nil, nil); err != nil {
@@ -593,8 +595,8 @@ func pruneAppState(home string) error {
 	return nil
 }
 
-// pruneTMData prunes the tendermint blocks and state based on the amount of blocks to keep
-func pruneTMData(home string) error {
+// pruneCmtData prunes the cometbft blocks and state based on the amount of blocks to keep
+func pruneCmtData(home string) error {
 
 	dbDir := rootify(dataDir, home)
 
@@ -603,35 +605,41 @@ func pruneTMData(home string) error {
 	}
 
 	// Get BlockStore
-	blockStoreDB, err := db.NewGoLevelDBWithOpts("blockstore", dbDir, &o)
+	blockStoreDB, err := dbm.NewGoLevelDBWithOpts("blockstore", dbDir, &o)
 	if err != nil {
 		return err
 	}
-	blockStore := tmstore.NewBlockStore(blockStoreDB)
+	blockStore := cmtstore.NewBlockStore(blockStoreDB)
 
 	// Get StateStore
-	stateDB, err := db.NewGoLevelDBWithOpts("state", dbDir, &o)
+	stateDB, err := dbm.NewGoLevelDBWithOpts("state", dbDir, &o)
 	if err != nil {
 		return err
 	}
 
-	stateStore := state.NewStore(stateDB)
+	stateStore := state.NewStore(stateDB, state.StoreOptions{})
 
 	base := blockStore.Base()
 
 	pruneHeight := blockStore.Height() - int64(blocks)
 
+	state, err := stateStore.Load()
+	if err != nil {
+		return err
+	}
+
 	errs, _ := errgroup.WithContext(context.Background())
+	var evidencePoint int64
 	errs.Go(func() error {
 		fmt.Println("pruning block store")
 		// prune block store
-		blocks, err = blockStore.PruneBlocks(pruneHeight)
+		_, evidencePoint, err = blockStore.PruneBlocks(pruneHeight, state)
 		if err != nil {
 			return err
 		}
 
 		fmt.Println("compacting block store")
-		if err := blockStoreDB.ForceCompact(nil, nil); err != nil {
+		if err := blockStoreDB.Compact(nil, nil); err != nil {
 			return err
 		}
 
@@ -640,13 +648,13 @@ func pruneTMData(home string) error {
 
 	fmt.Println("pruning state store")
 	// prune state store
-	err = stateStore.PruneStates(base, pruneHeight)
+	err = stateStore.PruneStates(base, pruneHeight, evidencePoint)
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("compacting state store")
-	if err := stateDB.ForceCompact(nil, nil); err != nil {
+	if err := stateDB.Compact(nil, nil); err != nil {
 		return err
 	}
 

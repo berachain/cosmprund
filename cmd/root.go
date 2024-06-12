@@ -8,15 +8,15 @@ import (
 )
 
 var (
-	homePath   string
-	dataDir    string
-	backend    string
-	app        string
-	cosmosSdk  bool
-	tendermint bool
-	blocks     uint64
-	versions   uint64
-	appName    = "cosmprund"
+	homePath  string
+	dataDir   string
+	backend   string
+	app       string
+	cosmosSdk bool
+	cometbft  bool
+	blocks    uint64
+	versions  uint64
+	appName   = "cosmprund"
 )
 
 // NewRootCmd returns the root command for relayer.
@@ -61,14 +61,14 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	// --cosmos-sdk flag
-	rootCmd.PersistentFlags().BoolVar(&cosmosSdk, "cosmos-sdk", true, "set to false if using only with tendermint (default true)")
+	rootCmd.PersistentFlags().BoolVar(&cosmosSdk, "cosmos-sdk", true, "set to false if using only with cometbft (default true)")
 	if err := viper.BindPFlag("cosmos-sdk", rootCmd.PersistentFlags().Lookup("cosmos-sdk")); err != nil {
 		panic(err)
 	}
 
-	// --tendermint flag
-	rootCmd.PersistentFlags().BoolVar(&tendermint, "tendermint", true, "set to false you dont want to prune tendermint data(default true)")
-	if err := viper.BindPFlag("tendermint", rootCmd.PersistentFlags().Lookup("tendermint")); err != nil {
+	// --cometbft flag
+	rootCmd.PersistentFlags().BoolVar(&cometbft, "cometbft", true, "set to false you dont want to prune cometbft data(default true)")
+	if err := viper.BindPFlag("cometbft", rootCmd.PersistentFlags().Lookup("cometbft")); err != nil {
 		panic(err)
 	}
 

@@ -1,6 +1,6 @@
 # Design
 
-We want to take in the tendermint state and blocks db store then call prune on them. 
+We want to take in the cometbft state and blocks db store then call prune on them.
 
 ### CMD
 
