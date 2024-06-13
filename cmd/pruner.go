@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -30,7 +29,6 @@ import (
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	"github.com/neilotoole/errgroup"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 
@@ -47,29 +45,21 @@ func pruneCmd() *cobra.Command {
 		Short: "prune data from the application store and block store",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			ctx := cmd.Context()
-			errs, _ := errgroup.WithContext(ctx)
-			var err error
-			if cometbft {
-				errs.Go(func() error {
-					if err = pruneCmtData(args[0]); err != nil {
-						return err
-					}
-					return nil
-				})
-			}
+			home := args[0]
 
 			if cosmosSdk {
-				err = pruneAppState(args[0])
-				if err != nil {
+				if err := pruneAppState(home); err != nil {
 					return err
 				}
-				return nil
-
 			}
 
-			return errs.Wait()
+			if cometbft {
+				if err := pruneCmtData(home); err != nil {
+					return err
+				}
+			}
+
+			return nil
 		},
 	}
 	return cmd
@@ -623,23 +613,17 @@ func pruneCmtData(home string) error {
 		return err
 	}
 
-	errs, _ := errgroup.WithContext(context.Background())
-	var evidencePoint int64
-	errs.Go(func() error {
-		fmt.Println("pruning block store")
-		// prune block store
-		_, evidencePoint, err = blockStore.PruneBlocks(pruneHeight, state)
-		if err != nil {
-			return err
-		}
+	fmt.Println("pruning block store")
+	// prune block store
+	_, evidencePoint, err := blockStore.PruneBlocks(pruneHeight, state)
+	if err != nil {
+		return err
+	}
 
-		fmt.Println("compacting block store")
-		if err := blockStoreDB.Compact(nil, nil); err != nil {
-			return err
-		}
-
-		return nil
-	})
+	fmt.Println("compacting block store")
+	if err := blockStoreDB.Compact(nil, nil); err != nil {
+		return err
+	}
 
 	fmt.Println("pruning state store")
 	// prune state store

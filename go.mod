@@ -19,7 +19,6 @@ require (
 	github.com/cosmos/iavl v1.2.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
 	github.com/cosmos/ibc-go/v8 v8.3.1
-	github.com/neilotoole/errgroup v0.1.6
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
