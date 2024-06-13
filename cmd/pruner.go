@@ -89,458 +89,17 @@ func PruneAppState(dataDir string) error {
 		authzkeeper.StoreKey,
 	)
 
-	if app == "osmosis" {
-		osmoKeys := types.NewKVStoreKeys(
-			"icahost",        //icahosttypes.StoreKey,
-			"gamm",           // gammtypes.StoreKey,
-			"lockup",         //lockuptypes.StoreKey,
-			"incentives",     // incentivestypes.StoreKey,
-			"epochs",         // epochstypes.StoreKey,
-			"poolincentives", //poolincentivestypes.StoreKey,
-			"txfees",         // txfeestypes.StoreKey,
-			"superfluid",     // superfluidtypes.StoreKey,
-			"bech32ibc",      // bech32ibctypes.StoreKey,
-			"wasm",           // wasm.StoreKey,
-			"tokenfactory",   //tokenfactorytypes.StoreKey,
-		)
-		for key, value := range osmoKeys {
+	keysToAdd := GetStoreKeysToAdd(app)
+	if keysToAdd != nil {
+		for key, value := range keysToAdd {
 			keys[key] = value
 		}
-	} else if app == "cosmoshub" {
-		cosmoshubKeys := types.NewKVStoreKeys(
-			"liquidity",
-			"icahost", // icahosttypes.StoreKey
-		)
-		for key, value := range cosmoshubKeys {
-			keys[key] = value
-		}
-	} else if app == "terra" { // terra classic
-		terraKeys := types.NewKVStoreKeys(
-			"oracle",   // oracletypes.StoreKey,
-			"market",   // markettypes.StoreKey,
-			"treasury", //treasurytypes.StoreKey,
-			"wasm",     // wasmtypes.StoreKey,
-		)
-		for key, value := range terraKeys {
-			keys[key] = value
-		}
-	} else if app == "kava" {
-		kavaKeys := types.NewKVStoreKeys(
-			"feemarket", //feemarkettypes.StoreKey,
-			"kavadist",  //kavadisttypes.StoreKey,
-			"auction",   //auctiontypes.StoreKey,
-			"issuance",  //issuancetypes.StoreKey,
-			"bep3",      //bep3types.StoreKey,
-			//"pricefeed", //pricefeedtypes.StoreKey,
-			//"swap",      //swaptypes.StoreKey,
-			"cdp",       //cdptypes.StoreKey,
-			"hard",      //hardtypes.StoreKey,
-			"committee", //committeetypes.StoreKey,
-			"incentive", //incentivetypes.StoreKey,
-			"evmutil",   //evmutiltypes.StoreKey,
-			"savings",   //savingstypes.StoreKey,
-			"bridge",    //bridgetypes.StoreKey,
-		)
-		for key, value := range kavaKeys {
-			keys[key] = value
-		}
+	}
 
-		delete(keys, "mint") // minttypes.StoreKey
-	} else if app == "evmos" {
-		evmosKeys := types.NewKVStoreKeys(
-			"evm",        // evmtypes.StoreKey,
-			"feemarket",  // feemarkettypes.StoreKey,
-			"inflation",  // inflationtypes.StoreKey,
-			"erc20",      // erc20types.StoreKey,
-			"incentives", // incentivestypes.StoreKey,
-			"epochs",     // epochstypes.StoreKey,
-			"claims",     // claimstypes.StoreKey,
-			"vesting",    // vestingtypes.StoreKey,
-		)
-		for key, value := range evmosKeys {
-			keys[key] = value
-		}
-	} else if app == "gravitybridge" {
-		gravitybridgeKeys := types.NewKVStoreKeys(
-			"gravity",   //  gravitytypes.StoreKey,
-			"bech32ibc", // bech32ibctypes.StoreKey,
-		)
-		for key, value := range gravitybridgeKeys {
-			keys[key] = value
-		}
-	} else if app == "sifchain" {
-		sifchainKeys := types.NewKVStoreKeys(
-			"dispensation",  // disptypes.StoreKey,
-			"ethbridge",     // ethbridgetypes.StoreKey,
-			"clp",           // clptypes.StoreKey,
-			"oracle",        // oracletypes.StoreKey,
-			"tokenregistry", // tokenregistrytypes.StoreKey,
-			"admin",         // admintypes.StoreKey,
-		)
-		for key, value := range sifchainKeys {
-			keys[key] = value
-		}
-	} else if app == "starname" {
-		starnameKeys := types.NewKVStoreKeys(
-			"wasm",          // wasm.StoreKey,
-			"configuration", // configuration.StoreKey,
-			"starname",      // starname.DomainStoreKey,
-		)
-		for key, value := range starnameKeys {
-			keys[key] = value
-		}
-	} else if app == "regen" {
-		regenKeys := types.NewKVStoreKeys()
-		for key, value := range regenKeys {
-			keys[key] = value
-		}
-	} else if app == "akash" {
-		akashKeys := types.NewKVStoreKeys(
-			"escrow",     // escrow.StoreKey,
-			"deployment", // deployment.StoreKey,
-			"market",     // market.StoreKey,
-			"provider",   // provider.StoreKey,
-			"audit",      // audit.StoreKey,
-			"cert",       // cert.StoreKey,
-			"inflation",  // inflation.StoreKey,
-		)
-		for key, value := range akashKeys {
-			keys[key] = value
-		}
-	} else if app == "sentinel" {
-		sentinelKeys := types.NewKVStoreKeys(
-			"distribution", // distributiontypes.StoreKey,
-			"custommint",   // customminttypes.StoreKey,
-			"swap",         // swaptypes.StoreKey,
-			"vpn",          // vpntypes.StoreKey,
-		)
-		for key, value := range sentinelKeys {
-			keys[key] = value
-		}
-	} else if app == "emoney" {
-		emoneyKeys := types.NewKVStoreKeys(
-			"liquidityprovider", // lptypes.StoreKey,
-			"issuer",            // issuer.StoreKey,
-			"authority",         // authority.StoreKey,
-			"market",            // market.StoreKey,
-			//"market_indices",    // market.StoreKeyIdx,
-			"buyback",   // buyback.StoreKey,
-			"inflation", // inflation.StoreKey,
-		)
-
-		for key, value := range emoneyKeys {
-			keys[key] = value
-		}
-	} else if app == "ixo" {
-		ixoKeys := types.NewKVStoreKeys(
-			"did",      // didtypes.StoreKey,
-			"bonds",    // bondstypes.StoreKey,
-			"payments", // paymentstypes.StoreKey,
-			"project",  // projecttypes.StoreKey,
-		)
-
-		for key, value := range ixoKeys {
-			keys[key] = value
-		}
-	} else if app == "juno" {
-		junoKeys := types.NewKVStoreKeys(
-			"icahost", // icahosttypes.StoreKey,
-			"wasm",    // wasm.StoreKey,
-		)
-
-		for key, value := range junoKeys {
-			keys[key] = value
-		}
-	} else if app == "likecoin" {
-		likecoinKeys := types.NewKVStoreKeys(
-			// custom modules
-			"iscn",    // iscntypes.StoreKey,
-			"nft",     // nftkeeper.StoreKey,
-			"likenft", // likenfttypes.StoreKey,
-		)
-
-		for key, value := range likecoinKeys {
-			keys[key] = value
-		}
-	} else if app == "teritori" {
-		// https://github.com/TERITORI/teritori-chain/blob/main/app/app.go#L323
-		teritoriKeys := types.NewKVStoreKeys(
-			// common modules
-			"packetfowardmiddleware", // routertypes.StoreKey,
-			"icahost",                // icahosttypes.StoreKey,
-			"wasm",                   // wasm.StoreKey,
-			// custom modules
-			"airdrop", // airdroptypes.StoreKey,
-		)
-
-		for key, value := range teritoriKeys {
-			keys[key] = value
-		}
-	} else if app == "jackal" {
-		// https://github.com/JackalLabs/canine-chain/blob/master/app/app.go#L347
-		jackalKeys := types.NewKVStoreKeys(
-			// common modules
-			"wasm",    // wasm.StoreKey,
-			"icahost", // icahosttypes.StoreKey,
-			// custom modules
-			"icacontroller", // icacontrollertypes.StoreKey, https://github.com/cosmos/ibc-go/blob/main/modules/apps/27-interchain-accounts/controller/types/keys.go#L5
-			// intertx is a demo and not an officially supported IBC team implementation
-			"intertx",       // intertxtypes.StoreKey, https://github.com/cosmos/interchain-accounts-demo/blob/8d4683081df0e1945be40be8ac18aa182106a660/x/inter-tx/types/keys.go#L4
-			"rns",           // rnsmoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/rns/types/keys.go#L5
-			"storage",       // storagemoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/storage/types/keys.go#L5
-			"dsig",          // dsigmoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/dsig/types/keys.go#L5
-			"filetree",      // filetreemoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/filetree/types/keys.go#L5
-			"notifications", // notificationsmoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/notifications/types/keys.go#L5
-			"jklmint",       // jklmintmoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/jklmint/types/keys.go#L7
-			"lp",            // lpmoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/lp/types/keys.go#L5
-			"oracle",        // https://github.com/JackalLabs/canine-chain/blob/master/x/oracle/types/keys.go#L5
-		)
-
-		for key, value := range jackalKeys {
-			keys[key] = value
-		}
-	} else if app == "kichain" {
-		kichainKeys := types.NewKVStoreKeys(
-			"wasm", // wasm.StoreKey,
-		)
-
-		for key, value := range kichainKeys {
-			keys[key] = value
-		}
-	} else if app == "cyber" {
-		cyberKeys := types.NewKVStoreKeys(
-			"liquidity", // liquiditytypes.StoreKey,
-			"bandwidth", // bandwidthtypes.StoreKey,
-			"graph",     // graphtypes.StoreKey,
-			"rank",      // ranktypes.StoreKey,
-			"grid",      // gridtypes.StoreKey,
-			"dmn",       // dmntypes.StoreKey,
-			"wasm",      // wasm.StoreKey,
-		)
-
-		for key, value := range cyberKeys {
-			keys[key] = value
-		}
-	} else if app == "cheqd" {
-		cheqdKeys := types.NewKVStoreKeys(
-			"cheqd", // cheqdtypes.StoreKey,
-		)
-
-		for key, value := range cheqdKeys {
-			keys[key] = value
-		}
-	} else if app == "stargaze" {
-		stargazeKeys := types.NewKVStoreKeys(
-			"claim", // claimmoduletypes.StoreKey,
-			"alloc", // allocmoduletypes.StoreKey,
-			"wasm",  // wasm.StoreKey,
-		)
-
-		for key, value := range stargazeKeys {
-			keys[key] = value
-		}
-	} else if app == "bandchain" {
-		bandchainKeys := types.NewKVStoreKeys(
-			"oracle", // oracletypes.StoreKey,
-		)
-
-		for key, value := range bandchainKeys {
-			keys[key] = value
-		}
-	} else if app == "chihuahua" {
-		chihuahuaKeys := types.NewKVStoreKeys(
-			"wasm", // wasm.StoreKey,
-		)
-
-		for key, value := range chihuahuaKeys {
-			keys[key] = value
-		}
-	} else if app == "bitcanna" {
-		bitcannaKeys := types.NewKVStoreKeys(
-			"bcna", // bcnamoduletypes.StoreKey,
-		)
-
-		for key, value := range bitcannaKeys {
-			keys[key] = value
-		}
-	} else if app == "konstellation" {
-		konstellationKeys := types.NewKVStoreKeys(
-			"oracle", // racletypes.StoreKey,
-			"wasm",   // wasm.StoreKey,
-		)
-
-		for key, value := range konstellationKeys {
-			keys[key] = value
-		}
-	} else if app == "omniflixhub" {
-		omniflixhubKeys := types.NewKVStoreKeys(
-			"alloc",       // alloctypes.StoreKey,
-			"onft",        // onfttypes.StoreKey,
-			"marketplace", // marketplacetypes.StoreKey,
-		)
-
-		for key, value := range omniflixhubKeys {
-			keys[key] = value
-		}
-	} else if app == "vidulum" {
-		vidulumKeys := types.NewKVStoreKeys(
-			"vidulum", // vidulummoduletypes.StoreKey,
-		)
-
-		for key, value := range vidulumKeys {
-			keys[key] = value
-		}
-	} else if app == "beezee" {
-		beezeeKeys := types.NewKVStoreKeys(
-			"scavenge", //scavengemodule.Storekey,
-		)
-
-		for key, value := range beezeeKeys {
-			keys[key] = value
-		}
-	} else if app == "provenance" {
-		provenanceKeys := types.NewKVStoreKeys(
-			"metadata",  // metadatatypes.StoreKey,
-			"marker",    // markertypes.StoreKey,
-			"attribute", // attributetypes.StoreKey,
-			"name",      // nametypes.StoreKey,
-			"msgfees",   // msgfeestypes.StoreKey,
-			"wasm",      // wasm.StoreKey,
-		)
-
-		for key, value := range provenanceKeys {
-			keys[key] = value
-		}
-	} else if app == "dig" {
-		digKeys := types.NewKVStoreKeys(
-			"wasm", // wasm.StoreKey,
-		)
-
-		for key, value := range digKeys {
-			keys[key] = value
-		}
-	} else if app == "comdex" {
-		comdexKeys := types.NewKVStoreKeys(
-			"wasm", // wasm.StoreKey,
-		)
-
-		for key, value := range comdexKeys {
-			keys[key] = value
-		}
-	} else if app == "bitsong" {
-		bitsongKeys := types.NewKVStoreKeys(
-			"packetfowardmiddleware", // routertypes.StoreKey,
-			"fantoken",               // fantokentypes.StoreKey,
-			"merkledrop",             // merkledroptypes.StoreKey,
-		)
-
-		for key, value := range bitsongKeys {
-			keys[key] = value
-		}
-	} else if app == "assetmantle" {
-		assetmantleKeys := types.NewKVStoreKeys(
-			"packetfowardmiddleware", // routerTypes.StoreKey,
-			"icahost",                // icaHostTypes.StoreKey,
-		)
-
-		for key, value := range assetmantleKeys {
-			keys[key] = value
-		}
-	} else if app == "fetchhub" {
-		fetchhubKeys := types.NewKVStoreKeys(
-			"wasm", // wasm.StoreKey,
-		)
-
-		for key, value := range fetchhubKeys {
-			keys[key] = value
-		}
-	} else if app == "persistent" {
-		persistentKeys := types.NewKVStoreKeys(
-			"halving", // halving.StoreKey,
-		)
-
-		for key, value := range persistentKeys {
-			keys[key] = value
-		}
-	} else if app == "cryptoorgchain" {
-		cryptoorgchainKeys := types.NewKVStoreKeys(
-			"chainmain", // chainmaintypes.StoreKey,
-			"supply",    // supplytypes.StoreKey,
-			"nft",       // nfttypes.StoreKey,
-		)
-
-		for key, value := range cryptoorgchainKeys {
-			keys[key] = value
-		}
-	} else if app == "irisnet" {
-		irisnetKeys := types.NewKVStoreKeys(
-			"guardian", // guardiantypes.StoreKey,
-			"token",    // tokentypes.StoreKey,
-			"nft",      // nfttypes.StoreKey,
-			"htlc",     // htlctypes.StoreKey,
-			"record",   // recordtypes.StoreKey,
-			"coinswap", // coinswaptypes.StoreKey,
-			"service",  // servicetypes.StoreKey,
-			"oracle",   // oracletypes.StoreKey,
-			"random",   // randomtypes.StoreKey,
-			"farm",     // farmtypes.StoreKey,
-			"tibc",     // tibchost.StoreKey,
-			"NFT",      // tibcnfttypes.StoreKey,
-			"MT",       // tibcmttypes.StoreKey,
-			"mt",       // mttypes.StoreKey,
-		)
-
-		for key, value := range irisnetKeys {
-			keys[key] = value
-		}
-	} else if app == "axelar" {
-		axelarKeys := types.NewKVStoreKeys(
-			"vote",       // voteTypes.StoreKey,
-			"evm",        // evmTypes.StoreKey,
-			"snapshot",   // snapTypes.StoreKey,
-			"multisig",   // multisigTypes.StoreKey,
-			"tss",        // tssTypes.StoreKey,
-			"nexus",      // nexusTypes.StoreKey,
-			"axelarnet",  // axelarnetTypes.StoreKey,
-			"reward",     // rewardTypes.StoreKey,
-			"permission", // permissionTypes.StoreKey,
-			"wasm",       // wasm.StoreKey,
-		)
-
-		for key, value := range axelarKeys {
-			keys[key] = value
-		}
-	} else if app == "umee" {
-		umeeKeys := types.NewKVStoreKeys(
-			"gravity", // gravitytypes.StoreKey,
-		)
-
-		for key, value := range umeeKeys {
-			keys[key] = value
-		}
-	} else if app == "desmos" {
-		// https://github.com/desmos-labs/desmos/blob/master/app/app.go#L255
-		desmosKeys := types.NewKVStoreKeys(
-			// common modules
-			"wasm", // wasm.StoreKey,
-			// IBC modules
-			"icacontroller", // icacontrollertypes.StoreKey, https://github.com/cosmos/ibc-go/blob/main/modules/apps/27-interchain-accounts/controller/types/keys.go#L5
-			"icahost",       // icahosttypes.StoreKey,
-			// mainnet since v4.7.0
-			"profiles",      // profilestypes.StoreKey,
-			"relationships", // relationshipstypes.StoreKey,
-			"subspaces",     // subspacestypes.StoreKey,
-			"posts",         // poststypes.StoreKey,
-			"reports",       // reports.StoreKey,
-			"reactions",     // reactions.StoreKey,
-			"fees",          // fees.StoreKey,
-			// mainnet since v6.0
-			"supply",
-			"tokenfactory",
-		)
-
-		for key, value := range desmosKeys {
-			keys[key] = value
+	keysToDelete := GetStoreKeysToDelete(app)
+	if keysToDelete != nil {
+		for _, key := range keysToDelete {
+			delete(keys, key)
 		}
 	}
 
@@ -629,6 +188,324 @@ func PruneCmtData(dataDir string) error {
 	fmt.Println("compacting state store")
 	if err := stateDB.Compact(nil, nil); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func GetStoreKeysToAdd(app string) map[string]*types.KVStoreKey {
+	if app == "osmosis" {
+		return types.NewKVStoreKeys(
+			"icahost",        //icahosttypes.StoreKey,
+			"gamm",           // gammtypes.StoreKey,
+			"lockup",         //lockuptypes.StoreKey,
+			"incentives",     // incentivestypes.StoreKey,
+			"epochs",         // epochstypes.StoreKey,
+			"poolincentives", //poolincentivestypes.StoreKey,
+			"txfees",         // txfeestypes.StoreKey,
+			"superfluid",     // superfluidtypes.StoreKey,
+			"bech32ibc",      // bech32ibctypes.StoreKey,
+			"wasm",           // wasm.StoreKey,
+			"tokenfactory",   //tokenfactorytypes.StoreKey,
+		)
+	} else if app == "cosmoshub" {
+		return types.NewKVStoreKeys(
+			"liquidity",
+			"icahost", // icahosttypes.StoreKey
+		)
+	} else if app == "terra" { // terra classic
+		return types.NewKVStoreKeys(
+			"oracle",   // oracletypes.StoreKey,
+			"market",   // markettypes.StoreKey,
+			"treasury", //treasurytypes.StoreKey,
+			"wasm",     // wasmtypes.StoreKey,
+		)
+	} else if app == "kava" {
+		return types.NewKVStoreKeys(
+			"feemarket", //feemarkettypes.StoreKey,
+			"kavadist",  //kavadisttypes.StoreKey,
+			"auction",   //auctiontypes.StoreKey,
+			"issuance",  //issuancetypes.StoreKey,
+			"bep3",      //bep3types.StoreKey,
+			//"pricefeed", //pricefeedtypes.StoreKey,
+			//"swap",      //swaptypes.StoreKey,
+			"cdp",       //cdptypes.StoreKey,
+			"hard",      //hardtypes.StoreKey,
+			"committee", //committeetypes.StoreKey,
+			"incentive", //incentivetypes.StoreKey,
+			"evmutil",   //evmutiltypes.StoreKey,
+			"savings",   //savingstypes.StoreKey,
+			"bridge",    //bridgetypes.StoreKey,
+		)
+	} else if app == "evmos" {
+		return types.NewKVStoreKeys(
+			"evm",        // evmtypes.StoreKey,
+			"feemarket",  // feemarkettypes.StoreKey,
+			"inflation",  // inflationtypes.StoreKey,
+			"erc20",      // erc20types.StoreKey,
+			"incentives", // incentivestypes.StoreKey,
+			"epochs",     // epochstypes.StoreKey,
+			"claims",     // claimstypes.StoreKey,
+			"vesting",    // vestingtypes.StoreKey,
+		)
+	} else if app == "gravitybridge" {
+		return types.NewKVStoreKeys(
+			"gravity",   //  gravitytypes.StoreKey,
+			"bech32ibc", // bech32ibctypes.StoreKey,
+		)
+	} else if app == "sifchain" {
+		return types.NewKVStoreKeys(
+			"dispensation",  // disptypes.StoreKey,
+			"ethbridge",     // ethbridgetypes.StoreKey,
+			"clp",           // clptypes.StoreKey,
+			"oracle",        // oracletypes.StoreKey,
+			"tokenregistry", // tokenregistrytypes.StoreKey,
+			"admin",         // admintypes.StoreKey,
+		)
+	} else if app == "starname" {
+		return types.NewKVStoreKeys(
+			"wasm",          // wasm.StoreKey,
+			"configuration", // configuration.StoreKey,
+			"starname",      // starname.DomainStoreKey,
+		)
+	} else if app == "regen" {
+		return types.NewKVStoreKeys()
+	} else if app == "akash" {
+		return types.NewKVStoreKeys(
+			"escrow",     // escrow.StoreKey,
+			"deployment", // deployment.StoreKey,
+			"market",     // market.StoreKey,
+			"provider",   // provider.StoreKey,
+			"audit",      // audit.StoreKey,
+			"cert",       // cert.StoreKey,
+			"inflation",  // inflation.StoreKey,
+		)
+	} else if app == "sentinel" {
+		return types.NewKVStoreKeys(
+			"distribution", // distributiontypes.StoreKey,
+			"custommint",   // customminttypes.StoreKey,
+			"swap",         // swaptypes.StoreKey,
+			"vpn",          // vpntypes.StoreKey,
+		)
+	} else if app == "emoney" {
+		return types.NewKVStoreKeys(
+			"liquidityprovider", // lptypes.StoreKey,
+			"issuer",            // issuer.StoreKey,
+			"authority",         // authority.StoreKey,
+			"market",            // market.StoreKey,
+			//"market_indices",    // market.StoreKeyIdx,
+			"buyback",   // buyback.StoreKey,
+			"inflation", // inflation.StoreKey,
+		)
+	} else if app == "ixo" {
+		return types.NewKVStoreKeys(
+			"did",      // didtypes.StoreKey,
+			"bonds",    // bondstypes.StoreKey,
+			"payments", // paymentstypes.StoreKey,
+			"project",  // projecttypes.StoreKey,
+		)
+	} else if app == "juno" {
+		return types.NewKVStoreKeys(
+			"icahost", // icahosttypes.StoreKey,
+			"wasm",    // wasm.StoreKey,
+		)
+	} else if app == "likecoin" {
+		return types.NewKVStoreKeys(
+			// custom modules
+			"iscn",    // iscntypes.StoreKey,
+			"nft",     // nftkeeper.StoreKey,
+			"likenft", // likenfttypes.StoreKey,
+		)
+	} else if app == "teritori" {
+		// https://github.com/TERITORI/teritori-chain/blob/main/app/app.go#L323
+		return types.NewKVStoreKeys(
+			// common modules
+			"packetfowardmiddleware", // routertypes.StoreKey,
+			"icahost",                // icahosttypes.StoreKey,
+			"wasm",                   // wasm.StoreKey,
+			// custom modules
+			"airdrop", // airdroptypes.StoreKey,
+		)
+	} else if app == "jackal" {
+		// https://github.com/JackalLabs/canine-chain/blob/master/app/app.go#L347
+		return types.NewKVStoreKeys(
+			// common modules
+			"wasm",    // wasm.StoreKey,
+			"icahost", // icahosttypes.StoreKey,
+			// custom modules
+			"icacontroller", // icacontrollertypes.StoreKey, https://github.com/cosmos/ibc-go/blob/main/modules/apps/27-interchain-accounts/controller/types/keys.go#L5
+			// intertx is a demo and not an officially supported IBC team implementation
+			"intertx",       // intertxtypes.StoreKey, https://github.com/cosmos/interchain-accounts-demo/blob/8d4683081df0e1945be40be8ac18aa182106a660/x/inter-tx/types/keys.go#L4
+			"rns",           // rnsmoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/rns/types/keys.go#L5
+			"storage",       // storagemoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/storage/types/keys.go#L5
+			"dsig",          // dsigmoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/dsig/types/keys.go#L5
+			"filetree",      // filetreemoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/filetree/types/keys.go#L5
+			"notifications", // notificationsmoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/notifications/types/keys.go#L5
+			"jklmint",       // jklmintmoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/jklmint/types/keys.go#L7
+			"lp",            // lpmoduletypes.StoreKey, https://github.com/JackalLabs/canine-chain/blob/master/x/lp/types/keys.go#L5
+			"oracle",        // https://github.com/JackalLabs/canine-chain/blob/master/x/oracle/types/keys.go#L5
+		)
+	} else if app == "kichain" {
+		return types.NewKVStoreKeys(
+			"wasm", // wasm.StoreKey,
+		)
+	} else if app == "cyber" {
+		return types.NewKVStoreKeys(
+			"liquidity", // liquiditytypes.StoreKey,
+			"bandwidth", // bandwidthtypes.StoreKey,
+			"graph",     // graphtypes.StoreKey,
+			"rank",      // ranktypes.StoreKey,
+			"grid",      // gridtypes.StoreKey,
+			"dmn",       // dmntypes.StoreKey,
+			"wasm",      // wasm.StoreKey,
+		)
+	} else if app == "cheqd" {
+		return types.NewKVStoreKeys(
+			"cheqd", // cheqdtypes.StoreKey,
+		)
+	} else if app == "stargaze" {
+		return types.NewKVStoreKeys(
+			"claim", // claimmoduletypes.StoreKey,
+			"alloc", // allocmoduletypes.StoreKey,
+			"wasm",  // wasm.StoreKey,
+		)
+	} else if app == "bandchain" {
+		return types.NewKVStoreKeys(
+			"oracle", // oracletypes.StoreKey,
+		)
+	} else if app == "chihuahua" {
+		return types.NewKVStoreKeys(
+			"wasm", // wasm.StoreKey,
+		)
+	} else if app == "bitcanna" {
+		return types.NewKVStoreKeys(
+			"bcna", // bcnamoduletypes.StoreKey,
+		)
+	} else if app == "konstellation" {
+		return types.NewKVStoreKeys(
+			"oracle", // racletypes.StoreKey,
+			"wasm",   // wasm.StoreKey,
+		)
+	} else if app == "omniflixhub" {
+		return types.NewKVStoreKeys(
+			"alloc",       // alloctypes.StoreKey,
+			"onft",        // onfttypes.StoreKey,
+			"marketplace", // marketplacetypes.StoreKey,
+		)
+	} else if app == "vidulum" {
+		return types.NewKVStoreKeys(
+			"vidulum", // vidulummoduletypes.StoreKey,
+		)
+	} else if app == "beezee" {
+		return types.NewKVStoreKeys(
+			"scavenge", //scavengemodule.Storekey,
+		)
+	} else if app == "provenance" {
+		return types.NewKVStoreKeys(
+			"metadata",  // metadatatypes.StoreKey,
+			"marker",    // markertypes.StoreKey,
+			"attribute", // attributetypes.StoreKey,
+			"name",      // nametypes.StoreKey,
+			"msgfees",   // msgfeestypes.StoreKey,
+			"wasm",      // wasm.StoreKey,
+		)
+	} else if app == "dig" {
+		return types.NewKVStoreKeys(
+			"wasm", // wasm.StoreKey,
+		)
+	} else if app == "comdex" {
+		return types.NewKVStoreKeys(
+			"wasm", // wasm.StoreKey,
+		)
+	} else if app == "bitsong" {
+		return types.NewKVStoreKeys(
+			"packetfowardmiddleware", // routertypes.StoreKey,
+			"fantoken",               // fantokentypes.StoreKey,
+			"merkledrop",             // merkledroptypes.StoreKey,
+		)
+	} else if app == "assetmantle" {
+		return types.NewKVStoreKeys(
+			"packetfowardmiddleware", // routerTypes.StoreKey,
+			"icahost",                // icaHostTypes.StoreKey,
+		)
+	} else if app == "fetchhub" {
+		return types.NewKVStoreKeys(
+			"wasm", // wasm.StoreKey,
+		)
+	} else if app == "persistent" {
+		return types.NewKVStoreKeys(
+			"halving", // halving.StoreKey,
+		)
+	} else if app == "cryptoorgchain" {
+		return types.NewKVStoreKeys(
+			"chainmain", // chainmaintypes.StoreKey,
+			"supply",    // supplytypes.StoreKey,
+			"nft",       // nfttypes.StoreKey,
+		)
+	} else if app == "irisnet" {
+		return types.NewKVStoreKeys(
+			"guardian", // guardiantypes.StoreKey,
+			"token",    // tokentypes.StoreKey,
+			"nft",      // nfttypes.StoreKey,
+			"htlc",     // htlctypes.StoreKey,
+			"record",   // recordtypes.StoreKey,
+			"coinswap", // coinswaptypes.StoreKey,
+			"service",  // servicetypes.StoreKey,
+			"oracle",   // oracletypes.StoreKey,
+			"random",   // randomtypes.StoreKey,
+			"farm",     // farmtypes.StoreKey,
+			"tibc",     // tibchost.StoreKey,
+			"NFT",      // tibcnfttypes.StoreKey,
+			"MT",       // tibcmttypes.StoreKey,
+			"mt",       // mttypes.StoreKey,
+		)
+	} else if app == "axelar" {
+		return types.NewKVStoreKeys(
+			"vote",       // voteTypes.StoreKey,
+			"evm",        // evmTypes.StoreKey,
+			"snapshot",   // snapTypes.StoreKey,
+			"multisig",   // multisigTypes.StoreKey,
+			"tss",        // tssTypes.StoreKey,
+			"nexus",      // nexusTypes.StoreKey,
+			"axelarnet",  // axelarnetTypes.StoreKey,
+			"reward",     // rewardTypes.StoreKey,
+			"permission", // permissionTypes.StoreKey,
+			"wasm",       // wasm.StoreKey,
+		)
+	} else if app == "umee" {
+		return types.NewKVStoreKeys(
+			"gravity", // gravitytypes.StoreKey,
+		)
+	} else if app == "desmos" {
+		// https://github.com/desmos-labs/desmos/blob/master/app/app.go#L255
+		return types.NewKVStoreKeys(
+			// common modules
+			"wasm", // wasm.StoreKey,
+			// IBC modules
+			"icacontroller", // icacontrollertypes.StoreKey, https://github.com/cosmos/ibc-go/blob/main/modules/apps/27-interchain-accounts/controller/types/keys.go#L5
+			"icahost",       // icahosttypes.StoreKey,
+			// mainnet since v4.7.0
+			"profiles",      // profilestypes.StoreKey,
+			"relationships", // relationshipstypes.StoreKey,
+			"subspaces",     // subspacestypes.StoreKey,
+			"posts",         // poststypes.StoreKey,
+			"reports",       // reports.StoreKey,
+			"reactions",     // reactions.StoreKey,
+			"fees",          // fees.StoreKey,
+			// mainnet since v6.0
+			"supply",
+			"tokenfactory",
+		)
+	}
+
+	return nil
+}
+
+func GetStoreKeysToDelete(app string) []string {
+	if app == "kava" {
+		return []string{
+			"mint", // minttypes.StoreKey
+		}
 	}
 
 	return nil
