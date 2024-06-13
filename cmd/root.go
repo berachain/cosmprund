@@ -1,10 +1,16 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+)
+
+var (
+	Version string
+	Commit  string
 )
 
 var (
@@ -16,60 +22,80 @@ var (
 	appName      = "cosmprund"
 )
 
-// NewRootCmd returns the root command for relayer.
 func NewRootCmd() *cobra.Command {
-	// RootCmd represents the base command when called without any subcommands
 	var rootCmd = &cobra.Command{
-		Use:   appName,
-		Short: "cosmprund is meant to prune data base history from a cosmos application, avoiding needing to state sync every couple amount of weeks",
+		Use:     "cosmprund",
+		Short:   "cosmprund cleans up databases of Cosmos SDK applications, removing historical data generally not needed for validator nodes",
+		Version: Version,
 	}
 
-	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, _ []string) error {
-		// reads `homeDir/config.yaml` into `var config *Config` before each command
-		// if err := initConfig(rootCmd); err != nil {
-		// 	return err
-		// }
+	pruneCmd := &cobra.Command{
+		Use:   "prune <data_dir>",
+		Short: "Prune database stores",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			dataDir := args[0]
 
-		return nil
+			if cosmosSdk {
+				if err := PruneAppState(dataDir); err != nil {
+					return err
+				}
+			}
+
+			if cometbft {
+				if err := PruneCmtData(dataDir); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		},
 	}
+
+	rootCmd.AddCommand(pruneCmd)
 
 	// --keep-blocks flag
-	rootCmd.PersistentFlags().Uint64VarP(&keepBlocks, "keep-blocks", "b", 10, "set the amount of blocks to keep")
-	if err := viper.BindPFlag("keep-blocks", rootCmd.PersistentFlags().Lookup("keep-blocks")); err != nil {
+	pruneCmd.PersistentFlags().Uint64VarP(&keepBlocks, "keep-blocks", "b", 10, "set the amount of blocks to keep")
+	if err := viper.BindPFlag("keep-blocks", pruneCmd.PersistentFlags().Lookup("keep-blocks")); err != nil {
 		panic(err)
 	}
 
 	// --keep-versions flag
-	rootCmd.PersistentFlags().Uint64VarP(&keepVersions, "keep-versions", "v", 10, "set the amount of versions to keep in the application store")
-	if err := viper.BindPFlag("keep-versions", rootCmd.PersistentFlags().Lookup("keep-versions")); err != nil {
+	pruneCmd.PersistentFlags().Uint64VarP(&keepVersions, "keep-versions", "v", 10, "set the amount of versions to keep in the application store")
+	if err := viper.BindPFlag("keep-versions", pruneCmd.PersistentFlags().Lookup("keep-versions")); err != nil {
 		panic(err)
 	}
 
 	// --app flag
-	rootCmd.PersistentFlags().StringVar(&app, "app", "", "set the app you are pruning (supported apps: osmosis)")
-	if err := viper.BindPFlag("app", rootCmd.PersistentFlags().Lookup("app")); err != nil {
+	pruneCmd.PersistentFlags().StringVar(&app, "app", "", "set the app you are pruning (supported apps: osmosis)")
+	if err := viper.BindPFlag("app", pruneCmd.PersistentFlags().Lookup("app")); err != nil {
 		panic(err)
 	}
 
 	// --cosmos-sdk flag
-	rootCmd.PersistentFlags().BoolVar(&cosmosSdk, "cosmos-sdk", true, "set to false if using only with cometbft")
-	if err := viper.BindPFlag("cosmos-sdk", rootCmd.PersistentFlags().Lookup("cosmos-sdk")); err != nil {
+	pruneCmd.PersistentFlags().BoolVar(&cosmosSdk, "cosmos-sdk", true, "set to false if using only with cometbft")
+	if err := viper.BindPFlag("cosmos-sdk", pruneCmd.PersistentFlags().Lookup("cosmos-sdk")); err != nil {
 		panic(err)
 	}
 
 	// --cometbft flag
-	rootCmd.PersistentFlags().BoolVar(&cometbft, "cometbft", true, "set to false you dont want to prune cometbft data")
-	if err := viper.BindPFlag("cometbft", rootCmd.PersistentFlags().Lookup("cometbft")); err != nil {
+	pruneCmd.PersistentFlags().BoolVar(&cometbft, "cometbft", true, "set to false you dont want to prune cometbft data")
+	if err := viper.BindPFlag("cometbft", pruneCmd.PersistentFlags().Lookup("cometbft")); err != nil {
 		panic(err)
 	}
 
-	rootCmd.AddCommand(NewPruneCmd())
+	versionCmd := &cobra.Command{
+		Use:   "version",
+		Short: "Output extended version",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("cosmprund version " + Version + " (commit " + Commit + ")")
+		},
+	}
+	rootCmd.AddCommand(versionCmd)
 
 	return rootCmd
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	cobra.EnableCommandSorting = false
 

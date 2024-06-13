@@ -28,7 +28,6 @@ import (
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 
 	"github.com/binaryholdings/cosmos-pruner/internal/rootmulti"
@@ -37,31 +36,6 @@ import (
 // load db
 // load app store and prune
 // if immutable tree is not deletable we should import and export current state
-
-func NewPruneCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "prune <data_dir>",
-		Short: "prune data from the application store and block store",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			dataDir := args[0]
-
-			if cosmosSdk {
-				if err := PruneAppState(dataDir); err != nil {
-					return err
-				}
-			}
-
-			if cometbft {
-				if err := PruneCmtData(dataDir); err != nil {
-					return err
-				}
-			}
-
-			return nil
-		},
-	}
-}
 
 func PruneAppState(dataDir string) error {
 
