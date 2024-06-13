@@ -9,34 +9,33 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	feegrant "cosmossdk.io/x/feegrant"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
+	feegrant "cosmossdk.io/x/feegrant"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/state"
+	cmtstore "github.com/cometbft/cometbft/store"
+	db "github.com/cosmos/cosmos-db"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	"github.com/neilotoole/errgroup"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"github.com/cometbft/cometbft/state"
-	cmtstore "github.com/cometbft/cometbft/store"
-	db "github.com/cosmos/cosmos-db"
-	dbm "github.com/cometbft/cometbft-db"
 
 	"github.com/binaryholdings/cosmos-pruner/internal/rootmulti"
 )
-
 
 // load db
 // load app store and prune
@@ -208,8 +207,7 @@ func pruneAppState(home string) error {
 			keys[key] = value
 		}
 	} else if app == "regen" {
-		regenKeys := types.NewKVStoreKeys(
-		)
+		regenKeys := types.NewKVStoreKeys()
 		for key, value := range regenKeys {
 			keys[key] = value
 		}
@@ -263,8 +261,8 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "juno" {
 		junoKeys := types.NewKVStoreKeys(
-			"icahost",  // icahosttypes.StoreKey,
-			"wasm",     // wasm.StoreKey,
+			"icahost", // icahosttypes.StoreKey,
+			"wasm",    // wasm.StoreKey,
 		)
 
 		for key, value := range junoKeys {
@@ -299,8 +297,8 @@ func pruneAppState(home string) error {
 		// https://github.com/JackalLabs/canine-chain/blob/master/app/app.go#L347
 		jackalKeys := types.NewKVStoreKeys(
 			// common modules
-			"wasm",     // wasm.StoreKey,
-			"icahost",  // icahosttypes.StoreKey,
+			"wasm",    // wasm.StoreKey,
+			"icahost", // icahosttypes.StoreKey,
 			// custom modules
 			"icacontroller", // icacontrollertypes.StoreKey, https://github.com/cosmos/ibc-go/blob/main/modules/apps/27-interchain-accounts/controller/types/keys.go#L5
 			// intertx is a demo and not an officially supported IBC team implementation
@@ -320,7 +318,7 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "kichain" {
 		kichainKeys := types.NewKVStoreKeys(
-			"wasm",     // wasm.StoreKey,
+			"wasm", // wasm.StoreKey,
 		)
 
 		for key, value := range kichainKeys {
@@ -342,7 +340,7 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "cheqd" {
 		cheqdKeys := types.NewKVStoreKeys(
-			"cheqd",    // cheqdtypes.StoreKey,
+			"cheqd", // cheqdtypes.StoreKey,
 		)
 
 		for key, value := range cheqdKeys {
@@ -350,9 +348,9 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "stargaze" {
 		stargazeKeys := types.NewKVStoreKeys(
-			"claim",    // claimmoduletypes.StoreKey,
-			"alloc",    // allocmoduletypes.StoreKey,
-			"wasm",     // wasm.StoreKey,
+			"claim", // claimmoduletypes.StoreKey,
+			"alloc", // allocmoduletypes.StoreKey,
+			"wasm",  // wasm.StoreKey,
 		)
 
 		for key, value := range stargazeKeys {
@@ -360,7 +358,7 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "bandchain" {
 		bandchainKeys := types.NewKVStoreKeys(
-			"oracle",   // oracletypes.StoreKey,
+			"oracle", // oracletypes.StoreKey,
 		)
 
 		for key, value := range bandchainKeys {
@@ -368,7 +366,7 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "chihuahua" {
 		chihuahuaKeys := types.NewKVStoreKeys(
-			"wasm",     // wasm.StoreKey,
+			"wasm", // wasm.StoreKey,
 		)
 
 		for key, value := range chihuahuaKeys {
@@ -376,7 +374,7 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "bitcanna" {
 		bitcannaKeys := types.NewKVStoreKeys(
-			"bcna",     // bcnamoduletypes.StoreKey,
+			"bcna", // bcnamoduletypes.StoreKey,
 		)
 
 		for key, value := range bitcannaKeys {
@@ -403,7 +401,7 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "vidulum" {
 		vidulumKeys := types.NewKVStoreKeys(
-			"vidulum",  // vidulummoduletypes.StoreKey,
+			"vidulum", // vidulummoduletypes.StoreKey,
 		)
 
 		for key, value := range vidulumKeys {
@@ -432,7 +430,7 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "dig" {
 		digKeys := types.NewKVStoreKeys(
-			"wasm",     // wasm.StoreKey,
+			"wasm", // wasm.StoreKey,
 		)
 
 		for key, value := range digKeys {
@@ -467,7 +465,7 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "fetchhub" {
 		fetchhubKeys := types.NewKVStoreKeys(
-			"wasm",     // wasm.StoreKey,
+			"wasm", // wasm.StoreKey,
 		)
 
 		for key, value := range fetchhubKeys {
@@ -475,7 +473,7 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "persistent" {
 		persistentKeys := types.NewKVStoreKeys(
-			"halving",  // halving.StoreKey,
+			"halving", // halving.StoreKey,
 		)
 
 		for key, value := range persistentKeys {
@@ -531,22 +529,22 @@ func pruneAppState(home string) error {
 		}
 	} else if app == "umee" {
 		umeeKeys := types.NewKVStoreKeys(
-			"gravity",  // gravitytypes.StoreKey,
+			"gravity", // gravitytypes.StoreKey,
 		)
 
 		for key, value := range umeeKeys {
 			keys[key] = value
 		}
 	} else if app == "desmos" {
-	    // https://github.com/desmos-labs/desmos/blob/master/app/app.go#L255
+		// https://github.com/desmos-labs/desmos/blob/master/app/app.go#L255
 		desmosKeys := types.NewKVStoreKeys(
 			// common modules
-			"wasm",     // wasm.StoreKey,
+			"wasm", // wasm.StoreKey,
 			// IBC modules
 			"icacontroller", // icacontrollertypes.StoreKey, https://github.com/cosmos/ibc-go/blob/main/modules/apps/27-interchain-accounts/controller/types/keys.go#L5
-			"icahost",  // icahosttypes.StoreKey,
+			"icahost",       // icahosttypes.StoreKey,
 			// mainnet since v4.7.0
-			"profiles", // profilestypes.StoreKey,
+			"profiles",      // profilestypes.StoreKey,
 			"relationships", // relationshipstypes.StoreKey,
 			"subspaces",     // subspacestypes.StoreKey,
 			"posts",         // poststypes.StoreKey,
@@ -584,7 +582,7 @@ func pruneAppState(home string) error {
 
 	fmt.Println(len(v64))
 
-	appStore.PruneStores(int64(len(v64))-10)
+	appStore.PruneStores(int64(len(v64)) - 10)
 
 	fmt.Println("compacting application state")
 	if err := appDB.ForceCompact(nil, nil); err != nil {
