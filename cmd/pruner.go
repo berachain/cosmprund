@@ -77,9 +77,6 @@ func pruneCmd() *cobra.Command {
 
 func pruneAppState(home string) error {
 
-	// this has the potential to expand size, should just use state sync
-	// dbType := dbm.BackendType(backend)
-
 	dbDir := rootify(dataDir, home)
 
 	o := opt.Options{

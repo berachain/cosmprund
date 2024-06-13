@@ -10,7 +10,6 @@ import (
 var (
 	homePath  string
 	dataDir   string
-	backend   string
 	app       string
 	cosmosSdk bool
 	cometbft  bool
@@ -45,12 +44,6 @@ func NewRootCmd() *cobra.Command {
 	// --versions flag
 	rootCmd.PersistentFlags().Uint64VarP(&versions, "versions", "v", 10, "set the amount of versions to keep in the application store")
 	if err := viper.BindPFlag("versions", rootCmd.PersistentFlags().Lookup("versions")); err != nil {
-		panic(err)
-	}
-
-	// --backend flag
-	rootCmd.PersistentFlags().StringVar(&backend, "backend", "goleveldb", "set the type of db being used") //todo add list of dbs to comment
-	if err := viper.BindPFlag("backend", rootCmd.PersistentFlags().Lookup("backend")); err != nil {
 		panic(err)
 	}
 
