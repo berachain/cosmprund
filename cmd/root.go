@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	app       string
-	cosmosSdk bool
-	cometbft  bool
-	blocks    uint64
-	versions  uint64
-	appName   = "cosmprund"
+	app          string
+	cosmosSdk    bool
+	cometbft     bool
+	keepBlocks   uint64
+	keepVersions uint64
+	appName      = "cosmprund"
 )
 
 // NewRootCmd returns the root command for relayer.
@@ -33,15 +33,15 @@ func NewRootCmd() *cobra.Command {
 		return nil
 	}
 
-	// --blocks flag
-	rootCmd.PersistentFlags().Uint64VarP(&blocks, "blocks", "b", 10, "set the amount of blocks to keep")
-	if err := viper.BindPFlag("blocks", rootCmd.PersistentFlags().Lookup("blocks")); err != nil {
+	// --keep-blocks flag
+	rootCmd.PersistentFlags().Uint64VarP(&keepBlocks, "keep-blocks", "b", 10, "set the amount of blocks to keep")
+	if err := viper.BindPFlag("keep-blocks", rootCmd.PersistentFlags().Lookup("keep-blocks")); err != nil {
 		panic(err)
 	}
 
-	// --versions flag
-	rootCmd.PersistentFlags().Uint64VarP(&versions, "versions", "v", 10, "set the amount of versions to keep in the application store")
-	if err := viper.BindPFlag("versions", rootCmd.PersistentFlags().Lookup("versions")); err != nil {
+	// --keep-versions flag
+	rootCmd.PersistentFlags().Uint64VarP(&keepVersions, "keep-versions", "v", 10, "set the amount of versions to keep in the application store")
+	if err := viper.BindPFlag("keep-versions", rootCmd.PersistentFlags().Lookup("keep-versions")); err != nil {
 		panic(err)
 	}
 

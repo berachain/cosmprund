@@ -124,7 +124,7 @@ func PruneAppState(dataDir string) error {
 
 	fmt.Println(len(v64))
 
-	appStore.PruneStores(int64(len(v64)) - 10)
+	appStore.PruneStores(int64(len(v64)) - int64(keepVersions))
 
 	fmt.Println("compacting application state")
 	if err := appDB.ForceCompact(nil, nil); err != nil {
@@ -159,7 +159,7 @@ func PruneCmtData(dataDir string) error {
 
 	base := blockStore.Base()
 
-	pruneHeight := blockStore.Height() - int64(blocks)
+	pruneHeight := blockStore.Height() - int64(keepBlocks)
 
 	state, err := stateStore.Load()
 	if err != nil {
