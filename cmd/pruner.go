@@ -38,8 +38,8 @@ import (
 // load app store and prune
 // if immutable tree is not deletable we should import and export current state
 
-func pruneCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func NewPruneCmd() *cobra.Command {
+	return &cobra.Command{
 		Use:   "prune <data_dir>",
 		Short: "prune data from the application store and block store",
 		Args:  cobra.ExactArgs(1),
@@ -47,13 +47,13 @@ func pruneCmd() *cobra.Command {
 			dataDir := args[0]
 
 			if cosmosSdk {
-				if err := pruneAppState(dataDir); err != nil {
+				if err := PruneAppState(dataDir); err != nil {
 					return err
 				}
 			}
 
 			if cometbft {
-				if err := pruneCmtData(dataDir); err != nil {
+				if err := PruneCmtData(dataDir); err != nil {
 					return err
 				}
 			}
@@ -61,10 +61,9 @@ func pruneCmd() *cobra.Command {
 			return nil
 		},
 	}
-	return cmd
 }
 
-func pruneAppState(dataDir string) error {
+func PruneAppState(dataDir string) error {
 
 	o := opt.Options{
 		DisableSeeksCompaction: true,
@@ -577,8 +576,8 @@ func pruneAppState(dataDir string) error {
 	return nil
 }
 
-// pruneCmtData prunes the cometbft blocks and state based on the amount of blocks to keep
-func pruneCmtData(dataDir string) error {
+// PruneCmtData prunes the cometbft blocks and state based on the amount of blocks to keep
+func PruneCmtData(dataDir string) error {
 
 	o := opt.Options{
 		DisableSeeksCompaction: true,
