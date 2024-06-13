@@ -37,19 +37,19 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	// --blocks flag
-	rootCmd.PersistentFlags().Uint64VarP(&blocks, "blocks", "b", 10, "set the amount of blocks to keep (default=10)")
+	rootCmd.PersistentFlags().Uint64VarP(&blocks, "blocks", "b", 10, "set the amount of blocks to keep")
 	if err := viper.BindPFlag("blocks", rootCmd.PersistentFlags().Lookup("blocks")); err != nil {
 		panic(err)
 	}
 
 	// --versions flag
-	rootCmd.PersistentFlags().Uint64VarP(&versions, "versions", "v", 10, "set the amount of versions to keep in the application store (default=10)")
+	rootCmd.PersistentFlags().Uint64VarP(&versions, "versions", "v", 10, "set the amount of versions to keep in the application store")
 	if err := viper.BindPFlag("versions", rootCmd.PersistentFlags().Lookup("versions")); err != nil {
 		panic(err)
 	}
 
 	// --backend flag
-	rootCmd.PersistentFlags().StringVar(&backend, "backend", "goleveldb", "set the type of db being used(default=goleveldb)") //todo add list of dbs to comment
+	rootCmd.PersistentFlags().StringVar(&backend, "backend", "goleveldb", "set the type of db being used") //todo add list of dbs to comment
 	if err := viper.BindPFlag("backend", rootCmd.PersistentFlags().Lookup("backend")); err != nil {
 		panic(err)
 	}
@@ -61,13 +61,13 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	// --cosmos-sdk flag
-	rootCmd.PersistentFlags().BoolVar(&cosmosSdk, "cosmos-sdk", true, "set to false if using only with cometbft (default true)")
+	rootCmd.PersistentFlags().BoolVar(&cosmosSdk, "cosmos-sdk", true, "set to false if using only with cometbft")
 	if err := viper.BindPFlag("cosmos-sdk", rootCmd.PersistentFlags().Lookup("cosmos-sdk")); err != nil {
 		panic(err)
 	}
 
 	// --cometbft flag
-	rootCmd.PersistentFlags().BoolVar(&cometbft, "cometbft", true, "set to false you dont want to prune cometbft data(default true)")
+	rootCmd.PersistentFlags().BoolVar(&cometbft, "cometbft", true, "set to false you dont want to prune cometbft data")
 	if err := viper.BindPFlag("cometbft", rootCmd.PersistentFlags().Lookup("cometbft")); err != nil {
 		panic(err)
 	}
