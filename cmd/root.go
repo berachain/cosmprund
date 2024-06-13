@@ -8,8 +8,6 @@ import (
 )
 
 var (
-	homePath  string
-	dataDir   string
 	app       string
 	cosmosSdk bool
 	cometbft  bool

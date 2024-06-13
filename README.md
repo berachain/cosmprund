@@ -32,7 +32,6 @@ sudo systemctl stop cosmovisor
 
 Flags: 
 
-- `data-dir`: path to data directory if not default
 - `blocks`: amount of blocks to keep on the node (Default 10)
 - `versions`: amount of app state versions to keep on the node (Default 10)
 - `app`: the application you want to prune, outside the sdk default modules. See `Supported Apps`

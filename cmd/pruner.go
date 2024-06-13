@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
@@ -41,20 +40,20 @@ import (
 
 func pruneCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "prune [path_to_home]",
+		Use:   "prune <data_dir>",
 		Short: "prune data from the application store and block store",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			home := args[0]
+			dataDir := args[0]
 
 			if cosmosSdk {
-				if err := pruneAppState(home); err != nil {
+				if err := pruneAppState(dataDir); err != nil {
 					return err
 				}
 			}
 
 			if cometbft {
-				if err := pruneCmtData(home); err != nil {
+				if err := pruneCmtData(dataDir); err != nil {
 					return err
 				}
 			}
@@ -65,16 +64,14 @@ func pruneCmd() *cobra.Command {
 	return cmd
 }
 
-func pruneAppState(home string) error {
-
-	dbDir := rootify(dataDir, home)
+func pruneAppState(dataDir string) error {
 
 	o := opt.Options{
 		DisableSeeksCompaction: true,
 	}
 
 	// Get BlockStore
-	appDB, err := db.NewGoLevelDBWithOpts("application", dbDir, &o)
+	appDB, err := db.NewGoLevelDBWithOpts("application", dataDir, &o)
 	if err != nil {
 		return err
 	}
@@ -581,23 +578,21 @@ func pruneAppState(home string) error {
 }
 
 // pruneCmtData prunes the cometbft blocks and state based on the amount of blocks to keep
-func pruneCmtData(home string) error {
-
-	dbDir := rootify(dataDir, home)
+func pruneCmtData(dataDir string) error {
 
 	o := opt.Options{
 		DisableSeeksCompaction: true,
 	}
 
 	// Get BlockStore
-	blockStoreDB, err := dbm.NewGoLevelDBWithOpts("blockstore", dbDir, &o)
+	blockStoreDB, err := dbm.NewGoLevelDBWithOpts("blockstore", dataDir, &o)
 	if err != nil {
 		return err
 	}
 	blockStore := cmtstore.NewBlockStore(blockStoreDB)
 
 	// Get StateStore
-	stateDB, err := dbm.NewGoLevelDBWithOpts("state", dbDir, &o)
+	stateDB, err := dbm.NewGoLevelDBWithOpts("state", dataDir, &o)
 	if err != nil {
 		return err
 	}
@@ -638,13 +633,4 @@ func pruneCmtData(home string) error {
 	}
 
 	return nil
-}
-
-// Utils
-
-func rootify(path, root string) string {
-	if filepath.IsAbs(path) {
-		return path
-	}
-	return filepath.Join(root, path)
 }
