@@ -470,6 +470,10 @@ func GetStoreKeysToAdd(app string) map[string]*types.KVStoreKey {
 			"supply",
 			"tokenfactory",
 		)
+	} else if app == "initia" {
+		return types.NewKVStoreKeys(
+			"mstaking",
+		)
 	}
 
 	return nil
@@ -479,6 +483,16 @@ func GetStoreKeysToDelete(app string) []string {
 	if app == "kava" {
 		return []string{
 			"mint", // minttypes.StoreKey
+		}
+	} else if app == "initia" {
+		return []string {
+			"staking",
+			"params",
+			"mint",
+		}
+	} else if app == "nillion" {
+		return []string {
+			"crisis",
 		}
 	}
 
