@@ -178,7 +178,6 @@ func GetStoreKeysToAdd(app string) map[string]*types.KVStoreKey {
 			"poolincentives", //poolincentivestypes.StoreKey,
 			"txfees",         // txfeestypes.StoreKey,
 			"superfluid",     // superfluidtypes.StoreKey,
-			"bech32ibc",      // bech32ibctypes.StoreKey,
 			"wasm",           // wasm.StoreKey,
 			"tokenfactory",   //tokenfactorytypes.StoreKey,
 		)
