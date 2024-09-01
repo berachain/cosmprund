@@ -510,6 +510,7 @@ func GetStoreKeysToDelete(app string) []string {
 		}
 	} else if app == "jackal" {
 		return []string {
+			"consensus",
 			"crisis",
 		}
 	} else if app == "lava" {
