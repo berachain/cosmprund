@@ -481,6 +481,7 @@ func GetStoreKeysToDelete(app string) []string {
 	if app == "agoric" {
 		return []string{
 			"consensus",
+			"crisis",
 		}
 	} else if app == "celestia" {
 		return []string{
