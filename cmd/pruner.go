@@ -184,7 +184,6 @@ func GetStoreKeysToAdd(app string) map[string]*types.KVStoreKey {
 		)
 	} else if app == "cosmoshub" {
 		return types.NewKVStoreKeys(
-			"liquidity",
 			"icahost", // icahosttypes.StoreKey
 		)
 	} else if app == "terra" { // terra classic
