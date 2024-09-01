@@ -527,6 +527,7 @@ func GetStoreKeysToDelete(app string) []string {
 		}
 	} else if app == "quicksilver" {
 		return []string {
+			"consensus",
 			"crisis",
 		}
 	} else if app == "seda" {
@@ -535,6 +536,7 @@ func GetStoreKeysToDelete(app string) []string {
 		}
 	} else if app == "source" {
 		return []string {
+			"consensus",
 			"crisis",
 		}
 	} else if app == "stride" {
