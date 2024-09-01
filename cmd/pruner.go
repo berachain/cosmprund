@@ -493,6 +493,10 @@ func GetStoreKeysToDelete(app string) []string {
 			"consensus",
 			"crisis",
 		}
+	} else if app == "humans" {
+		return []string{
+			"consensus",
+		}
 	} else if app == "kava" {
 		return []string{
 			"mint", // minttypes.StoreKey
@@ -502,6 +506,10 @@ func GetStoreKeysToDelete(app string) []string {
 			"staking",
 			"params",
 			"mint",
+		}
+	} else if app == "jackal" {
+		return []string {
+			"crisis",
 		}
 	} else if app == "lava" {
 		return []string{
