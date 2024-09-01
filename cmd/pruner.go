@@ -479,7 +479,11 @@ func GetStoreKeysToAdd(app string) map[string]*types.KVStoreKey {
 }
 
 func GetStoreKeysToDelete(app string) []string {
-	if app == "celestia" {
+	if app == "agoric" {
+		return []string{
+			"consensus",
+		}
+	} else if app == "celestia" {
 		return []string{
 			"crisis",
 		}
@@ -505,9 +509,17 @@ func GetStoreKeysToDelete(app string) []string {
 		return []string {
 			"crisis",
 		}
+	} else if app == "osmosis" {
+		return []string {
+			"feegrant",
+		}
 	} else if app == "seda" {
 		return []string {
 			"params",
+		}
+	} else if app == "stride" {
+		return []string {
+			"authz",
 		}
 	}
 
