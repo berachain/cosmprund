@@ -479,7 +479,15 @@ func GetStoreKeysToAdd(app string) map[string]*types.KVStoreKey {
 }
 
 func GetStoreKeysToDelete(app string) []string {
-	if app == "kava" {
+	if app == "celestia" {
+		return []string{
+			"crisis",
+		}
+	} else if app == "dymension" {
+		return []string{
+			"crisis",
+		}
+	} else if app == "kava" {
 		return []string{
 			"mint", // minttypes.StoreKey
 		}
