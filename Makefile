@@ -9,12 +9,10 @@ LD_FLAGS = -X github.com/binaryholdings/cosmos-pruner/cmd.Version=$(VERSION) \
 BUILD_FLAGS := -ldflags '$(LD_FLAGS)'
 
 build:
-	@echo "Building Pruning"
-	@go build -mod readonly $(BUILD_FLAGS) -o build/cosmprund main.go
+	go build -mod readonly $(BUILD_FLAGS) -o build/cosmprund main.go
 
 install:
-	@echo "Installing Lens"
-	@go install -mod readonly $(BUILD_FLAGS) ./...
+	go install -mod readonly $(BUILD_FLAGS) ./...
 
 clean:
 	rm -rf build

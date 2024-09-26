@@ -5,7 +5,7 @@ COPY . /app
 
 WORKDIR /app
 
-RUN go build -o cosmprund
+RUN go build -mod readonly -o cosmprund main.go
 
 
 FROM alpine
