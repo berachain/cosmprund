@@ -49,7 +49,6 @@ func PruneAppState(dataDir string) error {
 		return err
 	}
 
-	//TODO: need to get all versions in the store, setting randomly is too slow
 	fmt.Println("pruning application state")
 
 	// only mount keys from core sdk
@@ -77,7 +76,6 @@ func PruneAppState(dataDir string) error {
 		}
 	}
 
-	// TODO: cleanup app state
 	appStore := rootmulti.NewStore(appDB, log.NewLogger(os.Stderr), metrics.NewNoOpMetrics())
 
 	for _, value := range keys {
