@@ -14,7 +14,6 @@ var (
 )
 
 var (
-	app          string
 	cosmosSdk    bool
 	cometbft     bool
 	keepBlocks   uint64
@@ -63,12 +62,6 @@ func NewRootCmd() *cobra.Command {
 	// --keep-versions flag
 	pruneCmd.PersistentFlags().Uint64VarP(&keepVersions, "keep-versions", "v", 10, "set the amount of versions to keep in the application store")
 	if err := viper.BindPFlag("keep-versions", pruneCmd.PersistentFlags().Lookup("keep-versions")); err != nil {
-		panic(err)
-	}
-
-	// --app flag
-	pruneCmd.PersistentFlags().StringVar(&app, "app", "", "set the app you are pruning (supported apps: osmosis)")
-	if err := viper.BindPFlag("app", pruneCmd.PersistentFlags().Lookup("app")); err != nil {
 		panic(err)
 	}
 
