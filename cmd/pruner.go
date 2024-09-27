@@ -43,9 +43,12 @@ func PruneAppState(dataDir string) error {
 			return err
 		}
 
-		stores = make([]string, len(cInfo.StoreInfos))
-		for i, storeInfo := range cInfo.StoreInfos {
-			stores[i] = storeInfo.Name
+		for _, storeInfo := range cInfo.StoreInfos {
+			if len(storeInfo.CommitId.Hash) > 0 {
+				stores = append(stores, storeInfo.Name)
+			} else {
+				fmt.Println("skipping", storeInfo.Name, "store due to empty hash")
+			}
 		}
 	}
 
