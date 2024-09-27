@@ -44,6 +44,9 @@ func PruneAppState(dataDir string) error {
 		}
 
 		for _, storeInfo := range cInfo.StoreInfos {
+			// we only want to prune the stores with actual data.
+			// sometimes in-memory stores get leaked to disk without data.
+			// if that happens, the store's computed hash is empty as well.
 			if len(storeInfo.CommitId.Hash) > 0 {
 				storeNames = append(storeNames, storeInfo.Name)
 			} else {
