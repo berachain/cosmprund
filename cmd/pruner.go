@@ -36,7 +36,7 @@ func PruneAppState(dataDir string) error {
 	appStore := rootmulti.NewStore(appDB, log.NewLogger(os.Stderr), metrics.NewNoOpMetrics())
 	ver := rootmulti.GetLatestVersion(appDB)
 
-	stores := []string{}
+	storeNames := []string{}
 	if ver != 0 {
 		cInfo, err := appStore.GetCommitInfo(ver)
 		if err != nil {
@@ -45,14 +45,14 @@ func PruneAppState(dataDir string) error {
 
 		for _, storeInfo := range cInfo.StoreInfos {
 			if len(storeInfo.CommitId.Hash) > 0 {
-				stores = append(stores, storeInfo.Name)
+				storeNames = append(storeNames, storeInfo.Name)
 			} else {
 				fmt.Println("skipping", storeInfo.Name, "store due to empty hash")
 			}
 		}
 	}
 
-	keys := types.NewKVStoreKeys(stores...)
+	keys := types.NewKVStoreKeys(storeNames...)
 	for _, value := range keys {
 		appStore.MountStoreWithDB(value, types.StoreTypeIAVL, nil)
 	}
