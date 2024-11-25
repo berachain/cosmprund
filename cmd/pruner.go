@@ -11,6 +11,7 @@ import (
 	"github.com/cometbft/cometbft/state"
 	cmtstore "github.com/cometbft/cometbft/store"
 	db "github.com/cosmos/cosmos-db"
+	"github.com/rs/zerolog"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 
 	"github.com/binaryholdings/cosmos-pruner/internal/rootmulti"
@@ -20,8 +21,12 @@ import (
 // load app store and prune
 // if immutable tree is not deletable we should import and export current state
 
-func PruneAppState(dataDir string) error {
+var logger log.Logger
 
+func setConfig(cfg *log.Config) {
+	cfg.Level = zerolog.InfoLevel
+}
+func PruneAppState(dataDir string) error {
 	o := opt.Options{
 		DisableSeeksCompaction: true,
 	}
@@ -31,9 +36,10 @@ func PruneAppState(dataDir string) error {
 		return err
 	}
 
-	fmt.Println("pruning application state")
+	logger = log.NewLogger(os.Stderr, setConfig)
+	logger.Info("pruning application state")
 
-	appStore := rootmulti.NewStore(appDB, log.NewLogger(os.Stderr), metrics.NewNoOpMetrics())
+	appStore := rootmulti.NewStore(appDB, logger, metrics.NewNoOpMetrics())
 	ver := rootmulti.GetLatestVersion(appDB)
 
 	storeNames := []string{}
@@ -50,7 +56,7 @@ func PruneAppState(dataDir string) error {
 			if len(storeInfo.CommitId.Hash) > 0 {
 				storeNames = append(storeNames, storeInfo.Name)
 			} else {
-				fmt.Println("skipping", storeInfo.Name, "store due to empty hash")
+				logger.Info("skipping", storeInfo.Name, "store due to empty hash")
 			}
 		}
 	}
@@ -72,11 +78,9 @@ func PruneAppState(dataDir string) error {
 		v64[i] = int64(versions[i])
 	}
 
-	fmt.Println(len(v64))
-
 	appStore.PruneStores(int64(len(v64)) - int64(keepVersions))
 
-	fmt.Println("compacting application state")
+	logger.Info("compacting application state")
 	if err := appDB.ForceCompact(nil, nil); err != nil {
 		return err
 	}
@@ -116,14 +120,13 @@ func PruneCmtData(dataDir string) error {
 		return err
 	}
 
-	fmt.Println("pruning block store")
-	// prune block store
+	logger.Info("pruning block store", "blockstore height", blockStore.Height(), "pruning target", pruneHeight)
 	_, evidencePoint, err := blockStore.PruneBlocks(pruneHeight, state)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("compacting block store")
+	logger.Info("compacting block store")
 	if err := blockStoreDB.Compact(nil, nil); err != nil {
 		return err
 	}
@@ -141,7 +144,7 @@ func PruneCmtData(dataDir string) error {
 		}
 	}
 
-	fmt.Println("compacting state store")
+	logger.Info("compacting state store")
 	if err := stateDB.Compact(nil, nil); err != nil {
 		return err
 	}
