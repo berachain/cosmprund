@@ -128,11 +128,17 @@ func PruneCmtData(dataDir string) error {
 		return err
 	}
 
-	fmt.Println("pruning state store")
-	// prune state store
-	err = stateStore.PruneStates(base, pruneHeight, evidencePoint)
-	if err != nil {
-		return err
+	if pruneHeight == evidencePoint {
+		logger.Info("state store already pruned")
+	} else if pruneHeight < evidencePoint {
+		return fmt.Errorf("Asked to prune to %d but the chain is at %d", pruneHeight, evidencePoint)
+	} else {
+
+		logger.Info("pruning state store")
+		err = stateStore.PruneStates(base, pruneHeight, evidencePoint)
+		if err != nil {
+			return err
+		}
 	}
 
 	fmt.Println("compacting state store")
