@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
@@ -72,20 +73,97 @@ func PruneAppState(dataDir string) error {
 	}
 
 	versions := appStore.GetAllVersions()
+	if len(versions) > 0 {
+		v64 := make([]int64, len(versions))
+		for i := 0; i < len(versions); i++ {
+			v64[i] = int64(versions[i])
+		}
 
-	v64 := make([]int64, len(versions))
-	for i := 0; i < len(versions); i++ {
-		v64[i] = int64(versions[i])
+		// -1 in case we have exactly 1 block in the DB
+		targetHeight := v64[int64(len(v64))-int64(keepVersions)] - 1
+		logger.Info("Pruning up to", "targetHeight", targetHeight)
+
+		appStore.PruneStores(targetHeight)
 	}
 
-	appStore.PruneStores(int64(len(v64)) - int64(keepVersions))
-
+	if err := runGC(dataDir, "application", o, appDB); err != nil {
+		return err
+	}
+	appDB, err = db.NewGoLevelDBWithOpts("application", dataDir, &o)
+	if err != nil {
+		return err
+	}
 	logger.Info("compacting application state")
-	if err := appDB.ForceCompact(nil, nil); err != nil {
+	return appDB.ForceCompact(nil, nil)
+}
+
+// Implement a "GC" pass by copying only live data to a new DB
+// This function will CLOSE dbToGC.
+// This should be generic over dbs so we can also use dbm.GoLevelDB, but blockstore doesn't really
+// benefit from GC
+func runGC(dataDir string, dbName string, o opt.Options, dbToGC *db.GoLevelDB) error {
+	logger.Info("starting garbage collection pass")
+	gcDB, err := db.NewGoLevelDBWithOpts(fmt.Sprintf("%s_gc", dbName), dataDir, &o)
+	if err != nil {
+		logger.Error("Failed to open new application db", "err", err)
 		return err
 	}
 
-	//create a new app store
+	// Copy only live data
+	iter, err := dbToGC.Iterator(nil, nil)
+	if err != nil {
+		logger.Error("Failed to get original db iterator", "err", err)
+		return err
+	}
+	batchSize := 10_000
+	batch := gcDB.NewBatch()
+	count := 0
+
+	for ; iter.Valid(); iter.Next() {
+		batch.Set(iter.Key(), iter.Value())
+		count++
+
+		if count >= batchSize {
+			batch.Write()
+			batch.Close()
+			batch = gcDB.NewBatch()
+			count = 0
+		}
+	}
+	logger.Info("Finished GC, closing")
+
+	if count > 0 {
+		batch.Write()
+		batch.Close()
+	}
+	iter.Close()
+
+	dbToGC.Close()
+	gcDB.Close()
+
+	if count == 0 {
+		logger.Info("gc complete, but empty")
+		return nil
+	}
+
+	oldPath := filepath.Join(dataDir, fmt.Sprintf("%s.db", dbName))
+	backupPath := filepath.Join(dataDir, fmt.Sprintf("%s_backup.db", dbName))
+	newPath := filepath.Join(dataDir, fmt.Sprintf("%s_gc.db", dbName))
+	os.RemoveAll(backupPath)
+
+	// Swap directories
+	if err := os.Rename(oldPath, backupPath); err != nil {
+		logger.Error("Failed to backup original DB", "err", err)
+		return err
+	}
+
+	if err := os.Rename(newPath, oldPath); err != nil {
+		logger.Error("Failed to swap GC DB", "err", err)
+		// Try to restore original
+		os.Rename(backupPath, oldPath)
+		return err
+	}
+
 	return nil
 }
 
@@ -126,7 +204,6 @@ func PruneCmtData(dataDir string) error {
 		return err
 	}
 
-	logger.Info("compacting block store")
 	if err := blockStoreDB.Compact(nil, nil); err != nil {
 		return err
 	}
