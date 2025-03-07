@@ -14,11 +14,12 @@ var (
 )
 
 var (
-	cosmosSdk    bool
-	cometbft     bool
-	keepBlocks   uint64
-	keepVersions uint64
-	appName      = "cosmprund"
+	cosmosSdk     bool
+	cometbft      bool
+	keepBlocks    uint64
+	gcApplication bool
+	keepVersions  uint64
+	appName       = "cosmprund"
 )
 
 func NewRootCmd() *cobra.Command {
@@ -34,6 +35,7 @@ func NewRootCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			dataDir := args[0]
+			gcApplication = viper.GetBool("gc-application")
 
 			if cosmosSdk {
 				if err := PruneAppState(dataDir); err != nil {
@@ -53,6 +55,11 @@ func NewRootCmd() *cobra.Command {
 
 	rootCmd.AddCommand(pruneCmd)
 
+	// --gc-application flag
+	pruneCmd.PersistentFlags().Bool("gc-application", false, "whether to run GC on the application DB")
+	if err := viper.BindPFlag("gc-application", pruneCmd.PersistentFlags().Lookup("gc-application")); err != nil {
+		panic(err)
+	}
 	// --keep-blocks flag
 	pruneCmd.PersistentFlags().Uint64VarP(&keepBlocks, "keep-blocks", "b", 10, "set the amount of blocks to keep")
 	if err := viper.BindPFlag("keep-blocks", pruneCmd.PersistentFlags().Lookup("keep-blocks")); err != nil {

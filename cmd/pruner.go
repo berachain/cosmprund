@@ -86,12 +86,15 @@ func PruneAppState(dataDir string) error {
 		appStore.PruneStores(targetHeight)
 	}
 
-	if err := runGC(dataDir, "application", o, appDB); err != nil {
-		return err
-	}
-	appDB, err = db.NewGoLevelDBWithOpts("application", dataDir, &o)
-	if err != nil {
-		return err
+	if gcApplication {
+		if err := runGC(dataDir, "application", o, appDB); err != nil {
+			return err
+		}
+		appDB, err = db.NewGoLevelDBWithOpts("application", dataDir, &o)
+		if err != nil {
+			logger.Error("failed to re-open application")
+			return err
+		}
 	}
 	logger.Info("compacting application state")
 	return appDB.ForceCompact(nil, nil)
