@@ -44,6 +44,7 @@ func PruneAppState(dataDir string) error {
 	logger.Info("pruning application state")
 
 	appStore := rootmulti.NewStore(appDB, logger, metrics.NewNoOpMetrics())
+	appStore.SetIAVLDisableFastNode(true)
 	ver := rootmulti.GetLatestVersion(appDB)
 
 	appAdpt := NewCosmosDBAdapter(appDB)
@@ -61,7 +62,7 @@ func PruneAppState(dataDir string) error {
 			if len(storeInfo.CommitId.Hash) > 0 {
 				storeNames = append(storeNames, storeInfo.Name)
 			} else {
-				logger.Info("skipping", storeInfo.Name, "store due to empty hash")
+				logger.Info("skipping due to empty hash", "store", storeInfo.Name)
 			}
 		}
 	}
@@ -186,6 +187,7 @@ func PruneCmtData(dataDir string) error {
 	if err != nil {
 		return err
 	}
+	defer blockStoreDB.Close()
 	blockStore := cmtstore.NewBlockStore(blockStoreDB)
 
 	// Get StateStore
@@ -249,11 +251,18 @@ func PruneCmtData(dataDir string) error {
 	}
 
 	logger.Info("compacting state store")
+	stateAdpt := NewCometDBAdapter(stateDB) // runGC will close stateDB
+	if err := runGC(dataDir, "state", o, stateAdpt); err != nil {
+		return err
+	}
+	stateDB, err = dbm.NewGoLevelDBWithOpts("state", dataDir, &o)
+	if err != nil {
+		return err
+	}
 	if err := stateDB.Compact(nil, nil); err != nil {
 		return err
 	}
-
-	return nil
+	return stateDB.Close()
 }
 
 // Deletes all keys in the range <key>:<start> to <key>:<end>
