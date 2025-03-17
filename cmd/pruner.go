@@ -107,9 +107,12 @@ func PruneAppState(dataDir string) error {
 			logger.Error("failed to re-open application")
 			return err
 		}
+	} else {
+		// not necessary to compact the DB if running a GC, they achieve the same thing
+		logger.Info("compacting application state")
+		appDB.ForceCompact(nil, nil)
 	}
-	logger.Info("compacting application state")
-	return appDB.ForceCompact(nil, nil)
+	return nil
 }
 
 // Implement a "GC" pass by copying only live data to a new DB
@@ -249,17 +252,8 @@ func PruneCmtData(dataDir string) error {
 
 	logger.Info("compacting state store")
 	stateAdpt := NewCometDBAdapter(stateDB) // runGC will close stateDB
-	if err := runGC(dataDir, "state", o, stateAdpt); err != nil {
-		return err
-	}
-	stateDB, err = dbm.NewGoLevelDBWithOpts("state", dataDir, &o)
-	if err != nil {
-		return err
-	}
-	if err := stateDB.Compact(nil, nil); err != nil {
-		return err
-	}
-	return stateDB.Close()
+	// not necessary to compact the DB if we run GC on it, they achieve the same thing
+	return runGC(dataDir, "state", o, stateAdpt)
 }
 
 // Deletes all keys in the range <key>:<start> to <key>:<end>
