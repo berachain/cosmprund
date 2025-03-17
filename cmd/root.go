@@ -40,12 +40,14 @@ func NewRootCmd() *cobra.Command {
 
 			if cosmosSdk {
 				if err := PruneAppState(dataDir); err != nil {
+					logger.Error("failed %v\n", err)
 					return err
 				}
 			}
 
 			if cometbft {
 				if err := PruneCmtData(dataDir); err != nil {
+					logger.Error("failed %v\n", err)
 					return err
 				}
 			}
