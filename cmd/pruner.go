@@ -240,7 +240,7 @@ func PruneCmtData(dataDir string) error {
 		return fmt.Errorf("Asked to prune to %d but the chain is at %d", pruneHeight, evidencePoint)
 	} else {
 
-		logger.Info("pruning state store")
+		logger.Info("pruning state store", "pruneHeight", pruneHeight, "evidencePoint", evidencePoint)
 		err = stateStore.PruneStates(base, pruneHeight, evidencePoint)
 		if err != nil {
 			return err
@@ -316,7 +316,6 @@ func deleteHeightRange(db DBAdapter, key string, startHeight, endHeight uint64) 
 			}
 
 		}
-		logger.Info("Done with range", "pruned", prunedLastBatch, "start", string(startKey), "end", string(endKey))
 
 		if err := iter.Error(); err != nil {
 			iter.Close()
