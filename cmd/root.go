@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -37,6 +38,7 @@ func NewRootCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			dataDir := args[0]
 			gcApplication = viper.GetBool("gc-application")
+			logger = log.NewLogger(os.Stderr, setConfig)
 
 			if cosmosSdk {
 				if err := PruneAppState(dataDir); err != nil {

@@ -39,7 +39,6 @@ func PruneAppState(dataDir string) error {
 		return err
 	}
 
-	logger = log.NewLogger(os.Stderr, setConfig)
 	logger.Info("pruning application state")
 
 	appStore := rootmulti.NewStore(appDB, logger, metrics.NewNoOpMetrics())
@@ -84,7 +83,10 @@ func PruneAppState(dataDir string) error {
 		}
 
 		// -1 in case we have exactly 1 block in the DB
-		targetHeight := v64[int64(len(v64))-int64(keepVersions)] - 1
+		idx := int64(len(v64)) - int64(keepVersions)
+		idx = max(idx, int64(len(v64))-1)
+		logger.Info("Preparing to prune", "v64", len(v64), "keepVersions", keepVersions, "idx", idx)
+		targetHeight := v64[idx] - 1
 		logger.Info("Pruning up to", "targetHeight", targetHeight)
 
 		appStore.PruneStores(targetHeight)
@@ -202,6 +204,9 @@ func PruneCmtData(dataDir string) error {
 	base := blockStore.Base()
 
 	pruneHeight := blockStore.Height() - int64(keepBlocks)
+	if blockStore.Height() == 0 {
+		return fmt.Errorf("block store contains 0 blocks. probably an empty database.")
+	}
 
 	state, err := stateStore.Load()
 	if err != nil {
