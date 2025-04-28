@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
@@ -103,15 +105,19 @@ func PruneAppState(dataDir string) error {
 		if err := gcDB(dataDir, "application", o, appAdpt); err != nil {
 			return err
 		}
-		appDB, err = db.NewGoLevelDBWithOpts("application", dataDir, &o)
-		if err != nil {
-			logger.Error("failed to re-open application")
-			return err
-		}
 	} else {
 		// not necessary to compact the DB if running a GC, they achieve the same thing
 		logger.Info("compacting application state")
 		appDB.ForceCompact(nil, nil)
+	}
+
+	appPath := path.Join(dataDir, "application.db")
+	stat, err := os.Stat(appPath)
+	if stat, ok := stat.Sys().(*syscall.Stat_t); ok {
+		err = ChownR(appPath, int(stat.Uid), int(stat.Gid))
+		if err != nil {
+			logger.Error("Failed to run chown, continuing", "err", err)
+		}
 	}
 	return nil
 }
@@ -166,14 +172,36 @@ func gcDB(dataDir string, dbName string, o opt.Options, dbToGC DBAdapter) error 
 	}
 
 	oldPath := filepath.Join(dataDir, fmt.Sprintf("%s.db", dbName))
-	os.RemoveAll(oldPath)
 
+	oldStat, err := os.Stat(oldPath)
+	if err != nil {
+		logger.Error("Failed stat pre-GC DB", "err", err)
+		return err
+	}
+
+	os.RemoveAll(oldPath)
 	if err := os.Rename(newPath, oldPath); err != nil {
 		logger.Error("Failed to swap GC DB", "err", err)
 		return err
 	}
+	if stat, ok := oldStat.Sys().(*syscall.Stat_t); ok {
+		err = ChownR(oldPath, int(stat.Uid), int(stat.Gid))
+		if err != nil {
+			logger.Error("Failed to run chown, continuing", "err", err)
+		}
+	}
 
 	return nil
+}
+
+func ChownR(path string, uid, gid int) error {
+	logger.Info("Running chown", "path", path, "uid", uid, "gid", gid)
+	return filepath.Walk(path, func(name string, info os.FileInfo, err error) error {
+		if err == nil {
+			err = os.Chown(name, uid, gid)
+		}
+		return err
+	})
 }
 
 func pruneBlockAndStateStore(blockStoreAdpt, stateStoreAdpt DBAdapter, pruneHeight uint64) error {
