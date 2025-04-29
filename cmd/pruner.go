@@ -25,6 +25,8 @@ import (
 	"github.com/google/orderedcode"
 )
 
+const GiB uint64 = 1073741824 // 2**30
+
 var logger log.Logger
 
 func setConfig(cfg *log.Config) {
@@ -101,17 +103,23 @@ func PruneAppState(dataDir string) error {
 		logger.Info("purged", "count", prunedS)
 	}
 
-	if runGC {
-		if err := gcDB(dataDir, "application", o, appAdpt); err != nil {
-			return err
+	appPath := path.Join(dataDir, "application.db")
+	size, err := dirSize(appPath)
+	if size < 10*GiB {
+		logger.Info("Starting application DB GC/compact as it's smaller than 10GB", "sizeGB", size/GiB)
+		if runGC {
+			if err := gcDB(dataDir, "application", o, appAdpt); err != nil {
+				return err
+			}
+		} else {
+			// not necessary to compact the DB if running a GC, they achieve the same thing
+			logger.Info("compacting application state")
+			appDB.ForceCompact(nil, nil)
 		}
 	} else {
-		// not necessary to compact the DB if running a GC, they achieve the same thing
-		logger.Info("compacting application state")
-		appDB.ForceCompact(nil, nil)
+		logger.Info("Skipping application DB GC/compact as it's bigger than 10GB", "sizeGB", size/GiB)
 	}
 
-	appPath := path.Join(dataDir, "application.db")
 	stat, err := os.Stat(appPath)
 	if stat, ok := stat.Sys().(*syscall.Stat_t); ok {
 		err = ChownR(appPath, int(stat.Uid), int(stat.Gid))
@@ -434,4 +442,21 @@ func deleteHeightRange(db DBAdapter, key string, startHeight, endHeight uint64, 
 	}
 
 	return pruned, nil
+}
+
+func dirSize(path string) (uint64, error) {
+	var size uint64
+	err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
+		if err != nil {
+			logger.Warn("cannot access file", "file", filePath, "err", err)
+			return nil
+		}
+
+		if !info.IsDir() {
+			size += uint64(info.Size())
+		}
+		return nil
+	})
+
+	return size, err
 }
