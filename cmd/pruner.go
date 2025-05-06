@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 	"math"
@@ -280,13 +279,6 @@ func deleteAllByPrefix(db db.DB, key []byte) (uint64, error) {
 
 	for ; iter.Valid(); iter.Next() {
 		k := iter.Key()
-		if !bytes.HasPrefix(k, key) {
-			fmt.Println(k)
-			// There is no upper bound on the iterator;
-			// we rely on the fact that keys are stored in order
-			// to bail as soon as the prefix is over
-			break
-		}
 		err = batch.Delete(k)
 		count++
 		if err != nil {
