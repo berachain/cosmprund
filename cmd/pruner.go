@@ -41,6 +41,7 @@ func PruneAppState(dataDir string) error {
 	if err != nil {
 		return err
 	}
+	defer appDB.Close()
 
 	logger.Info("pruning application state")
 
@@ -162,9 +163,9 @@ func gcDB(dataDir string, dbName string, dbToGC db.DB, dbfmt db.BackendType) err
 
 	if count > 0 {
 		batch.Write()
-		batch.Close()
 	}
 	iter.Close()
+	batch.Close()
 
 	dbToGC.Close()
 	newDB.Close()
@@ -347,6 +348,9 @@ func PruneCmtData(dataDir string) error {
 	if err != nil {
 		return err
 	}
+	defer blockStoreDB.Close()
+	defer stateStoreDB.Close()
+	defer appStoreDB.Close()
 
 	logger.Info("Initial state", "ChainId", curState.ChainID, "LastBlockHeight", curState.LastBlockHeight)
 	pruneHeight := uint64(curState.LastBlockHeight) - keepBlocks

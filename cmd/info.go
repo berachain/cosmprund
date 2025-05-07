@@ -57,10 +57,10 @@ func DbState(dataDir string) (*LatestState, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer db.Close()
 
 	stateBytes, err := db.Get([]byte("stateKey"))
 	if err == nil && len(stateBytes) > 0 {
-		db.Close()
 		state, err := unmarshalState(stateBytes)
 		if err != nil {
 			return nil, err
@@ -73,7 +73,6 @@ func DbState(dataDir string) (*LatestState, error) {
 	// but the key will be passed through `orderedcode`, and become 0x88
 	seiStateBytes, err := db.Get([]byte{0x88})
 	if err == nil && len(seiStateBytes) > 0 {
-		db.Close()
 		state, err := unmarshalSeiState(seiStateBytes)
 		if err != nil {
 			return nil, err
