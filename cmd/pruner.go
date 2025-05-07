@@ -18,6 +18,7 @@ import (
 
 	db "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 
 	"github.com/binaryholdings/cosmos-pruner/internal/rootmulti"
 	"github.com/google/orderedcode"
@@ -120,7 +121,17 @@ func PruneAppState(dataDir string) error {
 // This function will CLOSE dbToGC.
 func gcDB(dataDir string, dbName string, dbToGC db.DB, dbfmt db.BackendType) error {
 	logger.Info("starting garbage collection pass", "db", dbName)
-	newDB, err := db.NewDB(fmt.Sprintf("%s_gc", dbName), dbfmt, dataDir)
+	var newDB db.DB
+	var err error
+
+	if dbfmt == db.GoLevelDBBackend {
+		opts := opt.Options{WriteBuffer: 1_000_000}
+		// Database will only flush the WAL to a SST file after WriteBuffer is full
+		newDB, err = db.NewGoLevelDBWithOpts(fmt.Sprintf("%s_gc", dbName), dataDir, &opts)
+	} else {
+		newDB, err = db.NewDB(fmt.Sprintf("%s_gc", dbName), dbfmt, dataDir)
+	}
+
 	if err != nil {
 		logger.Error("Failed to open gc db", "err", err)
 		return err
@@ -246,20 +257,40 @@ func pruneBlockAndStateStore(blockStoreDB, stateStoreDB, appStore db.DB, pruneHe
 	return nil
 }
 
+// state store keys
+const (
+	prefixValidators             = int64(5)
+	prefixConsensusParams        = int64(6)
+	prefixState                  = int64(8)
+	prefixFinalizeBlockResponses = int64(14)
+)
+
+// block store keys
+const (
+	prefixBlockMeta   = int64(0)
+	prefixBlockPart   = int64(1)
+	prefixBlockCommit = int64(2)
+	prefixSeenCommit  = int64(3)
+	prefixBlockHash   = int64(4)
+	prefixExtCommit   = int64(13)
+)
+
 func pruneSeiBlockAndStateStore(blockStoreDB, stateStoreDB, appStore db.DB, pruneHeight uint64) error {
-	for _, key := range []int64{0x0, 0x1, 0x2} { // 0x84 is not height but a hash?
+	for _, key := range []int64{prefixBlockMeta, prefixBlockPart, prefixBlockCommit} {
 		prunedEC, err := deleteSeiRange(blockStoreDB, key, 0, int64(pruneHeight))
 		if err != nil {
 			return err
 		}
 		logger.Info("Pruned", "key", key, "count", prunedEC, "store", "block")
 	}
-	// 0xe == 14 == prefixFinalizeBlockResponses
-	prunedS, err := deleteSeiRange(stateStoreDB, 0xe, 0, int64(pruneHeight))
-	if err != nil {
-		return err
+
+	for _, key := range []int64{prefixConsensusParams, prefixFinalizeBlockResponses, prefixValidators} {
+		prunedS, err := deleteSeiRange(stateStoreDB, key, 0, int64(pruneHeight))
+		if err != nil {
+			return err
+		}
+		logger.Info("Pruned state", "count", prunedS, "key", key)
 	}
-	logger.Info("Pruned state", "count", prunedS, "store", "state")
 	return nil
 }
 
