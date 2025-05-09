@@ -200,9 +200,6 @@ func PruneCmtData(dataDir string) error {
 	if err != nil {
 		return err
 	}
-	defer blockStoreDB.Close()
-	defer stateStoreDB.Close()
-	defer appStoreDB.Close()
 
 	logger.Info("Initial state", "ChainId", curState.ChainID, "LastBlockHeight", curState.LastBlockHeight)
 	pruneHeight := uint64(curState.LastBlockHeight) - keepBlocks
@@ -214,6 +211,10 @@ func PruneCmtData(dataDir string) error {
 		err = pruneSeiBlockAndStateStore(blockStoreDB, stateStoreDB, appStoreDB, pruneHeight)
 	}
 	if err != nil {
+		// gcDB closes the databases, and we can't close pebbledb instances twice
+		blockStoreDB.Close()
+		stateStoreDB.Close()
+		appStoreDB.Close()
 		return err
 	}
 
