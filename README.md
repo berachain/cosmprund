@@ -1,5 +1,3 @@
-# Cosmos-Pruner
-
 This project prunes data from 'old' blocks from a CometBFT/Tendermint/Cosmos-sdk node.
 
 Only the `block`, `state` and `application` databases are pruned.
