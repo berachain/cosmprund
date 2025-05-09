@@ -16,6 +16,10 @@ type PrefixAndSplitter struct {
 	splitter heightParser
 }
 
+func (p PrefixAndSplitter) String() string {
+	return p.prefix
+}
+
 // - Block headers (keys H:<HEIGHT>)
 // - Commit information (keys C:<HEIGHT>)
 // - ExtendedCommit information (keys EC:<HEIGHT>)
