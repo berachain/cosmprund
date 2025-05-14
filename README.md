@@ -2,7 +2,7 @@ This project prunes data from 'old' blocks from a CometBFT/Tendermint/Cosmos-sdk
 
 Only the `block`, `state` and `application` databases are pruned.
 
-Only `leveldb` and `pebbledb` backends are supported.
+Only `goleveldb` and `pebbledb` backends are supported.
 
 
 ## How to use
