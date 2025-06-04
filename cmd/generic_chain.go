@@ -7,7 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/store"
 	db "github.com/cosmos/cosmos-db"
+	proto "github.com/cosmos/gogoproto/proto"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -47,6 +49,22 @@ var appKeyInfos = []string{
 }
 
 func pruneBlockStore(blockStoreDB db.DB, pruneHeight uint64) error {
+
+	storeState, err := blockStoreDB.Get([]byte("blockStore"))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var bsj cmtproto.BlockStoreState
+
+	if err := proto.Unmarshal(storeState, &bsj); err != nil {
+		panic(fmt.Sprintf("Could not unmarshal bytes: %X", storeState))
+	}
+
+	base := bsj.Base
+
+	fmt.Println("Base height:", base, "Prune height:", pruneHeight)
+
 	if err := pruneKeys(
 		blockStoreDB,
 		"block",
@@ -62,6 +80,16 @@ func pruneBlockStore(blockStoreDB db.DB, pruneHeight uint64) error {
 		return fmt.Errorf("prune block BH: %w", err)
 	}
 	logger.Info("Pruned", "store", "block", "key", "BH:", "count", count)
+
+	bsj.Base = int64(pruneHeight) + 1
+	fmt.Println("Base height:", base, "Prune height:", pruneHeight)
+	bytes, err := proto.Marshal(&bsj)
+	if err != nil {
+		panic(fmt.Sprintf("Could not marshal state bytes: %v", err))
+	}
+	if err := blockStoreDB.SetSync([]byte("blockStore"), bytes); err != nil {
+		panic(err)
+	}
 	return nil
 }
 
