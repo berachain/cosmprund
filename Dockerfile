@@ -1,5 +1,5 @@
 # Stage 1: Builder
-FROM golang:1.24-alpine AS builder
+FROM public.ecr.aws/docker/library/golang:alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -27,7 +27,7 @@ RUN CGO_ENABLED=0 \
     -o /cosmprund main.go
 
 # Stage 2: Minimal runtime
-FROM alpine:3.21.3
+FROM public.ecr.aws/docker/library/alpine:3
 
 # Install CA certificates
 RUN apk add --no-cache ca-certificates
